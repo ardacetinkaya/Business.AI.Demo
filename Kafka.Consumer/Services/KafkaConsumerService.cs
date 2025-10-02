@@ -10,7 +10,7 @@ namespace Kafka.Consumer.Services;
 public class KafkaConsumerService(
     ILogger<KafkaConsumerService> logger,
     IOptions<KafkaSettings> kafkaSettings,
-    IConsumerService messageProcessor) : BackgroundService
+    IConsumerService consumerService) : BackgroundService
 {
     private readonly KafkaSettings _kafkaSettings = kafkaSettings.Value;
     private IConsumer<string, string>? _consumer;
@@ -77,7 +77,7 @@ public class KafkaConsumerService(
 
                     if (consumeResult != null)
                     {
-                        await messageProcessor.ProcessMessageAsync(consumeResult, stoppingToken);
+                        await consumerService.ProcessMessageAsync(consumeResult, stoppingToken);
 
                         // Manual commit if auto-commit is disabled
                         if (!_kafkaSettings.Consumer.EnableAutoCommit)
@@ -92,7 +92,6 @@ public class KafkaConsumerService(
                 {
                     logger.LogError(ex, "Consume error: {ErrorCode} - {Reason}", ex.Error.Code, ex.Error.Reason);
                     
-                    // Add exponential backoff for critical errors
                     if (ex.Error.IsFatal)
                     {
                         logger.LogCritical("Fatal consumer error, stopping service");

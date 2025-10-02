@@ -51,8 +51,8 @@ public class OrderEventGeneratorService(
 
                 logger.LogInformation("Generated and published order event for Order ID: {OrderId}", orderEvent.OrderId);
 
-                // Generate an event every 15-30 seconds
-                var delaySeconds = _random.Next(15, 31);
+                // Generate an event every 5-10 seconds
+                var delaySeconds = _random.Next(5, 11);
                 logger.LogDebug("Waiting {DelaySeconds} seconds before generating next event", delaySeconds);
                 await Task.Delay(TimeSpan.FromSeconds(delaySeconds), stoppingToken);
             }
@@ -101,7 +101,7 @@ public class OrderEventGeneratorService(
         {
             OrderId = orderId,
             CustomerId = customerId,
-            CustomerEmail = $"customer.{customerId.ToLower()}@example.com",
+            CustomerEmail = $"customer.{customerId.ToLower()}@exempel.se",
             OrderDate = DateTime.UtcNow.AddMinutes(-_random.Next(0, 60)),
             TotalAmount = Math.Round(totalAmount, 2),
             Currency = "SEK",
@@ -116,20 +116,20 @@ public class OrderEventGeneratorService(
 
     private ShippingAddress GenerateShippingAddress()
     {
-        var firstNames = new[] { "John", "Jane", "Mike", "Sarah", "David", "Lisa", "Tom", "Emma" };
-        var lastNames = new[] { "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis" };
-        var cities = new[] { "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio" };
-        var states = new[] { "NY", "CA", "IL", "TX", "AZ", "PA", "FL" };
+        //Some random mock data
+        var firstNames = new[] { "Anders", "Anna", "Erik", "Emma", "Johan", "Maria", "Lars", "Sara", "Nils", "Astrid", "Gustaf", "Ingrid" };
+        var lastNames = new[] { "Andersson", "Johansson", "Karlsson", "Nilsson", "Eriksson", "Larsson", "Olsson", "Persson", "Svensson", "Gustafsson" };
+        var cities = new[] { "Stockholm", "Göteborg", "Malmö", "Uppsala", "Västerås", "Örebro", "Linköping", "Helsingborg", "Jönköping", "Norrköping" };
+        var streetNames = new[] { "Drottninggatan", "Storgatan", "Kungsgatan", "Biblioteksgatan", "Hamngatan", "Vasagatan", "Sveavägen", "Östermalmsgatan" };
 
         return new ShippingAddress
         {
             FirstName = firstNames[_random.Next(firstNames.Length)],
             LastName = lastNames[_random.Next(lastNames.Length)],
-            Street = $"{_random.Next(100, 9999)} {new[] { "Main St", "Oak Ave", "Elm St", "Pine Rd", "Cedar Ln" }[_random.Next(5)]}",
+            Street = $"{streetNames[_random.Next(streetNames.Length)]} {_random.Next(1, 150)}",
             City = cities[_random.Next(cities.Length)],
-            State = states[_random.Next(states.Length)],
-            PostalCode = _random.Next(10000, 99999).ToString(),
-            Country = "SV"
+            PostalCode = $"{_random.Next(100, 999)} {_random.Next(10, 99)}",
+            Country = "SE"
         };
     }
 
@@ -144,7 +144,7 @@ public class OrderEventGeneratorService(
                 "PayPal" => "PayPal",
                 "Apple Pay" => "Apple",
                 "Google Pay" => "Google",
-                "Bank Transfer" => "Nordea",
+                "Bank Transfer" => "Swedbank",
                 _ => "Unknown"
             },
             TransactionId = $"TXN-{Guid.NewGuid().ToString()[..8].ToUpper()}",
