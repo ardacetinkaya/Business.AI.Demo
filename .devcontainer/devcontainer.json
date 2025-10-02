@@ -14,14 +14,17 @@
         "memory": "16gb",
         "storage": "24gb"
     },
-    "forwardPorts": [17077,9100],
+    "forwardPorts": [17077,9100,5050],
     "portsAttributes": {
     		"17077": {
     			"protocol": "https"
     		},
     		"9100": {
-    			"label": "https"
-    		}
+    			"protocol": "https"
+    		},
+            "5050": {
+                "protocol": "https"
+            }
     },
 
     // Use 'postCreateCommand' to run commands after the container is created.
