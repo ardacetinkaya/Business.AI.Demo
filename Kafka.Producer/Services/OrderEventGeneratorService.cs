@@ -41,7 +41,7 @@ public class OrderEventGeneratorService(
             try
             {
                 var orderEvent = GenerateOrderEvent();
-                var orderKey = $"customer-{orderEvent.CustomerId}";
+                var orderKey = orderEvent.OrderId;
 
                 await kafkaProducer.PublishEventAsync(
                     _kafkaSettings.Topics.OrderEvents, 
@@ -68,7 +68,7 @@ public class OrderEventGeneratorService(
 
     private OrderSubmittedEvent GenerateOrderEvent()
     {
-        var orderId = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{_random.Next(1000, 9999)}";
+        var orderId = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{DateTime.UtcNow.Ticks}";
         var customerId = $"CUST-{_random.Next(100, 999)}";
         var eventId = Guid.NewGuid().ToString();
 
