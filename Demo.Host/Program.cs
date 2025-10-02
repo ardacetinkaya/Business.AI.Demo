@@ -19,7 +19,7 @@ builder.Eventing.Subscribe<ResourceReadyEvent>(kafka.Resource, async (@event, ct
     try
     {
         await adminClient.CreateTopicsAsync([
-            new TopicSpecification { Name = "order-events", NumPartitions = 1, ReplicationFactor = 1 }
+            new TopicSpecification { Name = "order-events", NumPartitions = 3, ReplicationFactor = 1 }
         ]);
     }
     catch (CreateTopicsException)
