@@ -55,11 +55,10 @@ var consumer = builder.AddProject<Projects.Kafka_Consumer>("kafka-consumer")
 
 // Add the Kafka Producer application  
 var producer = builder.AddProject<Projects.Kafka_Producer>("kafka-producer")
-    .WithReplicas(1);
+    .WithReplicas(2);
 
 // Optional: Add resource dependencies if needed
 consumer.WaitFor(database);
-producer.WaitFor(kafka); // Uncomment if you want producer to wait for consumer
-
+producer.WaitFor(kafka);
 
 builder.Build().Run();
