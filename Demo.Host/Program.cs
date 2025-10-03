@@ -6,7 +6,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var postgres = builder.AddPostgres("postgres")
                 .WithPgAdmin(pgAdmin => pgAdmin.WithHostPort(5050));
 
-var database = postgres.AddDatabase("Orders");
+var database = postgres.AddDatabase("Checkouts");
 
 var username = builder.AddParameter("username");
 var password = builder.AddParameter("password");
@@ -41,6 +41,7 @@ builder.Eventing.Subscribe<ResourceReadyEvent>(kafka.Resource, async (@event, ct
 
 // Add the Kafka Consumer application
 var consumer = builder.AddProject<Projects.Kafka_Consumer>("kafka-consumer")
+    .WithReference(database)
     .WithEnvironment(context =>
     {
         // Additional individual connection details as environment variables
@@ -57,7 +58,6 @@ var consumer = builder.AddProject<Projects.Kafka_Consumer>("kafka-consumer")
 var producer = builder.AddProject<Projects.Kafka_Producer>("kafka-producer")
     .WithReplicas(2);
 
-// Optional: Add resource dependencies if needed
 consumer.WaitFor(database);
 producer.WaitFor(kafka);
 

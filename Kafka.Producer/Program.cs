@@ -14,9 +14,7 @@ var hostBuilder = Host.CreateDefaultBuilder(args)
     })
     .ConfigureServices((context, services) =>
     {
-        // Configure strongly-typed settings
-        services.Configure<KafkaSettings>(
-            context.Configuration.GetSection(KafkaSettings.SectionName));
+        services.Configure<KafkaSettings>(context.Configuration.GetSection(KafkaSettings.SectionName));
 
         // Register services
         services.AddSingleton<IProducerService, KafkaProducerService>();

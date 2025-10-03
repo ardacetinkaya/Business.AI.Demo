@@ -1,6 +1,6 @@
 # Kafka Demo Solution
 
-A simple Kafka producer-consumer demonstration. There are individual projects which are unified orchestration via .NET Aspire.
+A simple Kafka producer-consumer demonstration project for hands-on learning. The producer generates mock e-commerce order events and publishes them to Kafka topics. The consumer processes these events and stores order data in PostgreSQL. All projects are orchestrated using .NET Aspire for unified observability and management.
 
 ## Projects
 
@@ -41,11 +41,13 @@ dotnet run --project Kafka.Consumer
 ## Architecture
 
 ```
-┌─────────────────┐    Kafka Topic     ┌─────────────────┐
-│   Producer      │    order-events    │   Consumer      │
-│                 │ ─────────────────► │                 │
-│ - Event Gen     │                    │ - Message Proc  │
-│ - Order Events  │                    │ - Logging       │
-│ - Publishing    │                    │ - Processing    │
-└─────────────────┘                    └─────────────────┘
+┌─────────────────┐    Kafka Topic     ┌─────────────────┐    PostgreSQL
+│   Producer      │    order-events    │   Consumer      │  ┌─────────────┐
+│                 │ ─────────────────► │                 │  │   Orders    │
+│ - Swedish Data  │                    │ - JSON Parsing  │─►│   Table     │
+│ - Order Events  │                    │ - Order Mapping │  │             │
+│ - Publishing    │                    │ - Repository    │  ├─────────────┤
+└─────────────────┘                    └─────────────────┘  │  Payments   │
+                                                            │   Table     │
+                                                            └─────────────┘
 ```

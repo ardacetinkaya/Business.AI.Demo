@@ -26,7 +26,7 @@ public class OrderEventGeneratorService(
     };
     
     private readonly string[] _paymentMethods = {
-        "Credit Card", "PayPal", "Apple Pay", "Google Pay", "Bank Transfer"
+        "CreditCard", "PayPal", "ApplePay", "GooglePay", "BankTransfer", "DebitCard", "Swish"
     };
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

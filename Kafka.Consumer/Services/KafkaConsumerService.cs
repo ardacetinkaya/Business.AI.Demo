@@ -1,16 +1,12 @@
 using Confluent.Kafka;
 using Kafka.Consumer.Configuration;
-using Kafka.Consumer.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Kafka.Consumer.Services;
 
-public class KafkaConsumerService(
-    ILogger<KafkaConsumerService> logger,
-    IOptions<KafkaSettings> kafkaSettings,
-    IConsumerService consumerService) : BackgroundService
+public class KafkaConsumerService(ILogger<KafkaConsumerService> logger, IOptions<KafkaSettings> kafkaSettings, IConsumerService consumerService) : BackgroundService
 {
     private readonly KafkaSettings _kafkaSettings = kafkaSettings.Value;
     private IConsumer<string, string>? _consumer;
@@ -75,17 +71,16 @@ public class KafkaConsumerService(
                 {
                     var consumeResult = _consumer.Consume(TimeSpan.FromMilliseconds(1000));
 
-                    if (consumeResult != null)
-                    {
-                        await consumerService.ProcessMessageAsync(consumeResult, stoppingToken);
+                    if (consumeResult == null) continue;
+                    
+                    await consumerService.ProcessMessageAsync(consumeResult, stoppingToken);
 
-                        // Manual commit if auto-commit is disabled
-                        if (!_kafkaSettings.Consumer.EnableAutoCommit)
-                        {
-                            _consumer.Commit(consumeResult);
-                            logger.LogDebug("Manually committed offset for {Topic}:{Partition}:{Offset}",
-                                consumeResult.Topic, consumeResult.Partition, consumeResult.Offset);
-                        }
+                    // Manual commit if auto-commit is disabled
+                    if (!_kafkaSettings.Consumer.EnableAutoCommit)
+                    {
+                        _consumer.Commit(consumeResult);
+                        logger.LogDebug("Manually committed offset for {Topic}:{Partition}:{Offset}",
+                            consumeResult.Topic, consumeResult.Partition, consumeResult.Offset);
                     }
                 }
                 catch (ConsumeException ex)
@@ -97,8 +92,6 @@ public class KafkaConsumerService(
                         logger.LogCritical("Fatal consumer error, stopping service");
                         break;
                     }
-                    
-                    await Task.Delay(1000, stoppingToken);
                 }
                 catch (OperationCanceledException)
                 {
