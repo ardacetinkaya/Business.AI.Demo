@@ -14,17 +14,17 @@ public class OrderEventGeneratorService(
 {
     private readonly KafkaSettings _kafkaSettings = kafkaSettings.Value;
     private readonly Random _random = new();
-    
+
     private readonly string[] _productNames = {
         "Wireless Headphones", "Gaming Keyboard", "USB-C Cable", "Smartphone Stand",
         "Bluetooth Speaker", "Laptop Charger", "Wireless Mouse", "Phone Case",
         "Power Bank", "Screen Protector", "Memory Card", "Gaming Controller"
     };
-    
+
     private readonly string[] _categories = {
         "Electronics", "Gaming", "Accessories", "Mobile", "Audio", "Computing"
     };
-    
+
     private readonly string[] _paymentMethods = {
         "CreditCard", "PayPal", "ApplePay", "GooglePay", "BankTransfer", "DebitCard", "Swish"
     };
@@ -44,9 +44,9 @@ public class OrderEventGeneratorService(
                 var orderKey = orderEvent.OrderId;
 
                 await kafkaProducer.PublishEventAsync(
-                    _kafkaSettings.Topics.OrderEvents, 
-                    orderKey, 
-                    orderEvent, 
+                    _kafkaSettings.Topics.OrderEvents,
+                    orderKey,
+                    orderEvent,
                     stoppingToken);
 
                 logger.LogInformation("Generated and published order event for Order ID: {OrderId}", orderEvent.OrderId);
@@ -74,14 +74,14 @@ public class OrderEventGeneratorService(
 
         var itemCount = _random.Next(1, 4); // 1-3 items per order
         var items = new List<OrderItem>();
-        
+
         for (int i = 0; i < itemCount; i++)
         {
             var productName = _productNames[_random.Next(_productNames.Length)];
             var category = _categories[_random.Next(_categories.Length)];
             var quantity = _random.Next(1, 3);
             var unitPrice = _random.Next(10, 200) + (decimal)(_random.NextDouble() * 0.99);
-            
+
             items.Add(new OrderItem
             {
                 ProductId = $"PROD-{_random.Next(1000, 9999)}",
@@ -140,16 +140,26 @@ public class OrderEventGeneratorService(
             PaymentMethod = paymentMethod,
             PaymentProvider = paymentMethod switch
             {
-                "Credit Card" => "Stripe",
+                "CreditCard" => "Stripe",
+                "DebitCard" => GenerateBank(),
+                "Swish" => "Nordea",
                 "PayPal" => "PayPal",
-                "Apple Pay" => "Apple",
-                "Google Pay" => "Google",
-                "Bank Transfer" => "Swedbank",
+                "ApplePay" => "Apple",
+                "GooglePay" => "Google",
+                "BankTransfer" => GenerateBank(),
                 _ => "Unknown"
             },
             TransactionId = $"TXN-{Guid.NewGuid().ToString()[..8].ToUpper()}",
             ProcessedAt = DateTime.UtcNow,
             Status = "Completed"
         };
+    }
+
+    private string GenerateBank()
+    {
+        var list = new List<string> { "Nordea", "SwedBank", "Barclay", "HSBC", "CitiBank", "SEB" };
+        var random = new Random();
+
+        return list[random.Next(0, list.Count)];
     }
 }
