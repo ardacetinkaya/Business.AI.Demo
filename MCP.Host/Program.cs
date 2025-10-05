@@ -32,7 +32,7 @@ builder.Services.AddHttpClient("mcp"); // basic client; McpHttpClient sets heade
 builder.Services.AddSingleton<McpHttpClient>(sp =>
 {
     var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient("mcp");
-    return new McpHttpClient(http, builder.Configuration["MCPServer:Endpoint"] ?? throw new InvalidOperationException("Missing configuration: MCPServer.Endpoint"));
+    return new McpHttpClient(http, "http://localhost:5001");
 });
 
 builder.Services.AddSingleton<IMcpToolProvider, McpToolProvider>();
