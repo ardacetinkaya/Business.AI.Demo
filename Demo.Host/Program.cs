@@ -4,16 +4,18 @@ using Confluent.Kafka.Admin;
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
-                .WithPgAdmin(pgAdmin => pgAdmin.WithHostPort(5050));
+                .WithPgAdmin(pgAdmin =>
+                {
+                    pgAdmin.WithHostPort(5050);
+                });
 
 var database = postgres.AddDatabase("Checkouts");
 
-var username = builder.AddParameter("username");
-var password = builder.AddParameter("password");
-
-
 var kafka = builder.AddKafka("kafka", 9093)
-    .WithKafkaUI(kafkaUI => kafkaUI.WithHostPort(9100));
+    .WithKafkaUI(ui =>
+    {
+        ui.WithHostPort(9100);
+    });
 
 builder.Eventing.Subscribe<ResourceReadyEvent>(kafka.Resource, async (@event, ct) =>
 {
@@ -39,26 +41,41 @@ builder.Eventing.Subscribe<ResourceReadyEvent>(kafka.Resource, async (@event, ct
 
 
 
-// Add the Kafka Consumer application
 var consumer = builder.AddProject<Projects.Kafka_Consumer>("kafka-consumer")
     .WithReference(database)
     .WithEnvironment(context =>
     {
         // Additional individual connection details as environment variables
-        context.EnvironmentVariables["POSTGRES_HOST"] = postgres.Resource.PrimaryEndpoint.Property(EndpointProperty.Host);
-        context.EnvironmentVariables["POSTGRES_PORT"] = postgres.Resource.PrimaryEndpoint.Property(EndpointProperty.Port);
-        context.EnvironmentVariables["POSTGRES_USER"] = postgres.Resource.UserNameParameter;
-        context.EnvironmentVariables["POSTGRES_PASSWORD"] = postgres.Resource.PasswordParameter;
-        context.EnvironmentVariables["POSTGRES_DATABASE"] = database.Resource.DatabaseName;
+        context.EnvironmentVariables["Kafka:Consumer:BootstrapServers"] = kafka.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
     })
-    .WithReference(database)
-    .WithReplicas(1);
+    .WithReplicas(1)
+    .WaitFor(kafka)
+    .WaitFor(database);
 
-// Add the Kafka Producer application  
 var producer = builder.AddProject<Projects.Kafka_Producer>("kafka-producer")
-    .WithReplicas(2);
+    .WithEnvironment(context =>
+    {
+        // Additional individual connection details as environment variables
+        context.EnvironmentVariables["Kafka:Producer:BootstrapServers"] = kafka.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
+    })
+    .WithReplicas(1)
+    .WaitFor(kafka);
 
-consumer.WaitFor(database);
-producer.WaitFor(kafka);
+var mcpServer = builder.AddProject<Projects.MCP_Server>("mcp-server")
+    .WithHttpEndpoint(5001)
+    .WithReplicas(1)
+    .WaitFor(producer);
+
+
+var githubModelsToken = builder.AddParameter("githubmodels-token");
+var mcpHost = builder.AddProject<Projects.MCP_Host>("mcp-host")
+    .WithEnvironment(context =>
+    {
+        // Additional individual connection details as environment variables
+        context.EnvironmentVariables["GitHubModels:Token"] = githubModelsToken.Resource.GetValueAsync(CancellationToken.None);
+    })
+    .WithReplicas(1)
+    .WaitFor(mcpServer);
+
 
 builder.Build().Run();
