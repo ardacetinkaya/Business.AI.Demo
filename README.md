@@ -41,6 +41,18 @@ dotnet run --project Kafka.Consumer
 ## Architecture
 
 ```
+                    ┌─────────────────┐
+                    │   Demo.Host     │
+                    │  (.NET Aspire)  │
+                    │ - Orchestration │
+                    │ - Observability │
+                    │ - Configuration │
+                    └─────────────────┘
+                             │
+                             │ manages development environment
+                             ▼
+────────────────────────────────────────────────────────────────────────────
+
 ┌─────────────────┐    Kafka Topic     ┌─────────────────┐    PostgreSQL
 │   Producer      │    order-events    │   Consumer      │  ┌─────────────┐
 │                 │ ─────────────────► │                 │  │   Orders    │
@@ -50,4 +62,23 @@ dotnet run --project Kafka.Consumer
 └─────────────────┘                    └─────────────────┘  │  Payments   │
                                                             │   Table     │
                                                             └─────────────┘
+                                                                   │
+                                                                   │
+┌─────────────────┐                                                │
+│   MCP.Server    │                                                │
+│                 │◄───────────────────────────────────────────────┘
+│ - MCP for some  │
+│ business data   │
+│                 │
+└─────────────────┘
+         │
+         │ provides services to
+         ▼
+┌─────────────────┐    GitHub Models
+│   MCP.Host      │  ┌─────────────────┐
+│                 │──│ AI Integration  │
+│ - Web Interface │  │                 │
+│ - AI Services   │  │ - Language      │
+│ - Integration   │  │ - Models        │
+└─────────────────┘  └─────────────────┘
 ```
