@@ -1,6 +1,6 @@
-# Kafka Demo Solution
+# Business with AI Technical Demonstration
 
-A simple Kafka producer-consumer demonstration project for hands-on learning. The producer generates mock e-commerce order events and publishes them to Kafka topics. The consumer processes these events and stores order data in PostgreSQL. All projects are orchestrated using .NET Aspire for unified observability and management.
+This is just a simple business application with AI integratrion demo project for hands-on learning. 
 
 ## Projects
 
