@@ -28,6 +28,8 @@
         - Use only simple markdown to format your responses.
         - Use the search tool to find relevant information. 
         - Use get_random_number to generate number if it is asked.
+        - Use get_recent_payments to retrieve payment information from the system. 
+        - Use markdown table to display proper results
         ";
 
     private int statefulMessageCount;
@@ -58,11 +60,30 @@
         var responseText = new TextContent("");
         currentResponseMessage = new ChatMessage(ChatRole.Assistant, [responseText]);
         currentResponseCancellation = new();
-        await foreach (var update in ChatClient.GetStreamingResponseAsync(messages.Skip(statefulMessageCount), chatOptions, currentResponseCancellation.Token))
+        
+        try
         {
-            messages.AddMessages(update, filter: aiContent => aiContent is not TextContent);
-            responseText.Text += update.Text;
-            chatOptions.ConversationId = update.ConversationId;
+            await foreach (var update in ChatClient.GetStreamingResponseAsync(messages.Skip(statefulMessageCount), chatOptions, currentResponseCancellation.Token))
+            {
+                // Log tool calls for debugging
+                @* if (update.Contents?.OfType<FunctionCallContent>().Any() == true)
+                {
+                    var toolCalls = update.Contents.OfType<FunctionCallContent>();
+                    foreach (var toolCall in toolCalls)
+                    {
+                        Console.WriteLine($"Tool called: {toolCall.Name}");
+                    }
+                } *@
+                                
+                messages.AddMessages(update, filter: aiContent => aiContent is not TextContent);
+                responseText.Text += update.Text;
+                chatOptions.ConversationId = update.ConversationId;
+                ChatMessageItem.NotifyChanged(currentResponseMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            responseText.Text += $"\n\nError: {ex.Message}";
             ChatMessageItem.NotifyChanged(currentResponseMessage);
         }
 

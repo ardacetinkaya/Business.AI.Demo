@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.AI;
 
 namespace MCP.Host.Clients;
+
 public interface IMcpToolProvider
 {
     Task<IReadOnlyList<AITool>> GetToolsAsync(CancellationToken ct = default);
@@ -45,24 +46,27 @@ public sealed class McpToolProvider(McpHttpClient mcp, ILogger<McpToolProvider> 
 
             // Convert to AIFunction delegates that forward to MCP tools/call
             var aiTools = tools.Select(tool =>
-                AIFunctionFactory.Create(
-                    async (AIFunctionArguments args, CancellationToken cancellationToken) =>
-                    {
-                        var dict = args.ToDictionary(kv => kv.Key, kv => kv.Value);
-                        
-                        var result = await mcp.CallToolAsync(
-                            tool.Name, 
-                            JsonSerializer.SerializeToElement(dict), 
-                            cancellationToken);
-                        
-                        return result.GetRawText();
-                    },
-                    new AIFunctionFactoryOptions
-                    {
-                        Name = tool.Name,
-                        Description = tool.Description ?? "External MCP tool"
-                    }
-                )
+                {
+                    logger.LogInformation("Setting MCP tool {ToolName}", tool.Name);
+                    return AIFunctionFactory.Create(
+                        async (AIFunctionArguments args, CancellationToken cancellationToken) =>
+                        {
+                            var dict = args.ToDictionary(kv => kv.Key, kv => kv.Value);
+
+                            var result = await mcp.CallToolAsync(
+                                tool.Name,
+                                JsonSerializer.SerializeToElement(dict),
+                                cancellationToken);
+                            var rawText = result.GetRawText();
+                            logger.LogInformation("MCP tool {ToolName}: {RawText}", tool.Name, rawText);
+                            return rawText;
+                        },
+                        new AIFunctionFactoryOptions
+                        {
+                            Name = tool.Name,
+                            Description = tool.Description ?? "External MCP tool"
+                        });
+                }
             ).Cast<AITool>().ToList();
 
             _cached = aiTools;

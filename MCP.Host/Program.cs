@@ -1,10 +1,10 @@
-using Microsoft.Extensions.AI;
+using System.ClientModel;
+using MCP.Host.Clients;
 using MCP.Host.Components;
 using MCP.Host.Services;
 using MCP.Host.Services.Ingestion;
+using Microsoft.Extensions.AI;
 using OpenAI;
-using System.ClientModel;
-using MCP.Host.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();

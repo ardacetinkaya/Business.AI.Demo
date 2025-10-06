@@ -62,8 +62,10 @@ var producer = builder.AddProject<Projects.Kafka_Producer>("kafka-producer")
     .WaitFor(kafka);
 
 var mcpServer = builder.AddProject<Projects.MCP_Server>("mcp-server")
+    .WithReference(database)
     .WithHttpEndpoint(5001)
     .WithReplicas(1)
+    .WaitFor(database)
     .WaitFor(producer);
 
 
@@ -73,6 +75,7 @@ var mcpHost = builder.AddProject<Projects.MCP_Host>("mcp-host")
     {
         // Additional individual connection details as environment variables
         context.EnvironmentVariables["GitHubModels:Token"] = githubModelsToken.Resource.GetValueAsync(CancellationToken.None);
+        context.EnvironmentVariables["MCPServer:Endpoint"] = "http://localhost:5001";
     })
     .WithReplicas(1)
     .WaitFor(mcpServer);

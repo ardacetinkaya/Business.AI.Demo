@@ -1,8 +1,8 @@
+using System.Text.Json;
 using Confluent.Kafka;
 using Kafka.Producer.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Text.Json;
 
 namespace Kafka.Producer.Services;
 

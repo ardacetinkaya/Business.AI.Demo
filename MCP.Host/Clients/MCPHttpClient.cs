@@ -123,7 +123,7 @@ public sealed class McpHttpClient : IDisposable
             {
                 var json = line.Substring("data:".Length).Trim();
                 var doc = JsonDocument.Parse(json);
-                toolResult = doc.RootElement.GetProperty("result");
+                toolResult = doc.RootElement;
                 break;
             }
         }

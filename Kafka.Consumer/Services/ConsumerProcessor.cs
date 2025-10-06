@@ -1,8 +1,8 @@
+using System.Text.Json;
 using Confluent.Kafka;
 using Kafka.Consumer.Models;
 using Kafka.Consumer.Repositories;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace Kafka.Consumer.Services;
 

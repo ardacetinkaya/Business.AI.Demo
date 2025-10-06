@@ -18,23 +18,27 @@ public sealed class ToolAttachingChatClient(IChatClient inner, IMcpToolProvider 
 
         return existing;
     }
-    
-    public override async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+
+    private async Task<ChatOptions> PrepareOptionsWithToolsAsync(ChatOptions? options, CancellationToken cancellationToken)
     {
         var chatOptions = options ?? new ChatOptions();
         var mcpTools = await provider.GetToolsAsync(cancellationToken);
         chatOptions.Tools = MergeTools(chatOptions.Tools, mcpTools);
+        return chatOptions;
+    }
+    
+    public override async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+    {
+        var chatOptions = await PrepareOptionsWithToolsAsync(options, cancellationToken);
         
         return await base.GetResponseAsync(messages, chatOptions, cancellationToken);
     }
 
     public override async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var chatOptions = options ?? new ChatOptions();
-        var mcpTools = await provider.GetToolsAsync(cancellationToken);
-        chatOptions.Tools = MergeTools(chatOptions.Tools, mcpTools);
+        var chatOptions = await PrepareOptionsWithToolsAsync(options, cancellationToken);
 
-        await foreach (var update in base.GetStreamingResponseAsync(messages, options, cancellationToken))
+        await foreach (var update in base.GetStreamingResponseAsync(messages, chatOptions, cancellationToken))
             yield return update;
     }
 
