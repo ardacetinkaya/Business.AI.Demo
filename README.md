@@ -68,18 +68,26 @@ A web interface where users can chat with AI about their business data.
                                      │
                                      │ manages development environment
                                      ▼
- ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-              ┌─────────────────┐    Kafka Topic     ┌───────────────────┐    PostgreSQL
-              │     Producer    │    order-events    │      Consumer     │  ┌─────────────┐
-              │                 │ ─────────────────► │                   │  │   Orders    │
+ ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+              ┌─────────────────┐                    ┌───────────────────┐    PostgreSQL
+              │     Producer    │                    │      Consumer     │  ┌─────────────┐
+              │                 │                    │                   │  │   Orders    │
               │ - Order Events  │                    │ - Event Processing│─►│   Table     │
               │ - Mock Data     │                    │ - Business Logic  │  │             │
               │ - Publishing    │                    │ - Data Storage    │  ├─────────────┤
               └─────────────────┘                    └───────────────────┘  │  Payments   │
-                                                                            │   Table     │
-                                                                            └─────────────┘
+                     │                                         ▲            │   Table     │
+                     │           ┌─────────────────┐           │            └─────────────┘
+                     │           │     Kafka       │           │                 │
+                     │           │                 │           │                 │
+                     └─────────► │ - Topics        │ ──────────┘                 │
+                                 │   - order-events│                             │
+                                 │                 │                             │
+                                 └─────────────────┘               provides data │
+                                                                                 │ 
                                                                                  │
-                                                                                 │ provides data
+                                                                                 │
+                                                                                 │
               ┌─────────────────┐                                                │
               │    MCP.Server   │                                                │
               │                 │◄───────────────────────────────────────────────┘
@@ -96,7 +104,7 @@ A web interface where users can chat with AI about their business data.
                        │
                        │ MCP protocol
                        ▼
-              ┌─────────────────┐     External AI      
+              ┌─────────────────┐        External AI      
               │   MCP.Host(web) │   ┌─────────────────┐
               │                 │───│  GitHub Models  │
               │ - Web Interface │   │                 │
