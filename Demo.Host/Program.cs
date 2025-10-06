@@ -8,7 +8,7 @@ var postgres = builder.AddPostgres("postgres")
                 {
                     pgAdmin.WithHostPort(5050);
                 });
-
+var cache = builder.AddValkey("cache");
 var database = postgres.AddDatabase("Checkouts");
 
 var kafka = builder.AddKafka("kafka", 9093)
@@ -63,6 +63,7 @@ var producer = builder.AddProject<Projects.Kafka_Producer>("kafka-producer")
 
 var mcpServer = builder.AddProject<Projects.MCP_Server>("mcp-server")
     .WithReference(database)
+    .WithReference(cache)
     .WithHttpEndpoint(5001)
     .WithReplicas(1)
     .WaitFor(database)

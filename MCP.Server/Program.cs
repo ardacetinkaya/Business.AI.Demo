@@ -17,7 +17,7 @@ if (string.IsNullOrEmpty(connectionString))
 {
     throw new InvalidOperationException("Orders connection string is not configured.");
 }
-
+builder.AddRedisDistributedCache(connectionName: "cache");
 // Register repositories
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
