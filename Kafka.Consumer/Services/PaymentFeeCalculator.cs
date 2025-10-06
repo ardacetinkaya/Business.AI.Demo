@@ -10,10 +10,10 @@ public class PaymentFeeCalculator : IPaymentFeeCalculator
     private static readonly Dictionary<string, decimal> PaymentMethodFees = new(StringComparer.OrdinalIgnoreCase)
     {
         { "CreditCard", 2.0m },
-        { "DebitCard", 1.8m },
+        { "DebitCard", 0.9m },
         { "PayPal", 1.5m },
         { "ApplePay", 1.2m },
-        { "GooglePay", 1.2m },
+        { "GooglePay", 1.1m },
         { "BankTransfer", 0.8m },
         { "Swish", 0.7m },
         // Default for unknown methods

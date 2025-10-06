@@ -11,6 +11,11 @@ public class OrderRepository(
 {
     public async Task<Order> SaveOrderAsync(Order order, CancellationToken cancellationToken = default)
     {
+        return await SaveOrderAsync(order, saveChanges: true, cancellationToken);
+    }
+
+    public async Task<Order> SaveOrderAsync(Order order, bool saveChanges, CancellationToken cancellationToken = default)
+    {
         try
         {
             // Check if order already exists to prevent duplicates
@@ -28,7 +33,11 @@ public class OrderRepository(
             order.ProcessedAt = DateTime.UtcNow;
             
             context.Orders.Add(order);
-            await context.SaveChangesAsync(cancellationToken);
+            
+            if (saveChanges)
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
 
             logger.LogInformation("Successfully saved order {OrderId} with ID {Id}", order.OrderId, order.Id);
             return order;
@@ -52,6 +61,14 @@ public class OrderRepository(
         return await context.Orders
             .AsNoTracking()
             .FirstOrDefaultAsync(o => o.EventId == eventId, cancellationToken);
+    }
+
+    public async Task<Order?> GetOrderWithPaymentAsync(string orderId, string eventId, CancellationToken cancellationToken = default)
+    {
+        return await context.Orders
+            .Include(o => o.Payment)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.OrderId == orderId || o.EventId == eventId, cancellationToken);
     }
 
     public async Task<IEnumerable<Order>> GetOrdersByCustomerIdAsync(string customerId, CancellationToken cancellationToken = default)

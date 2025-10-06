@@ -1,6 +1,6 @@
 using Kafka.Consumer.Data;
 using Kafka.Consumer.Models;
-using Microsoft.EntityFrameworkCore;
+using Kafka.Consumer.Repositories;
 using Microsoft.Extensions.Logging;
 
 namespace Kafka.Consumer.Services;
@@ -10,14 +10,16 @@ public interface IOrderProcessingService
     Task<(Order order, Payment payment)> ProcessOrderWithPaymentAsync(Order order, Payment payment, CancellationToken cancellationToken = default);
 }
 
-public class OrderProcessingService(CheckoutsDbContext context, ILogger<OrderProcessingService> logger) : IOrderProcessingService
+public class OrderProcessingService(
+    CheckoutsDbContext context, 
+    IOrderRepository orderRepository,
+    IPaymentRepository paymentRepository,
+    ILogger<OrderProcessingService> logger) : IOrderProcessingService
 {
     public async Task<(Order order, Payment payment)> ProcessOrderWithPaymentAsync(Order order, Payment payment,CancellationToken cancellationToken = default)
     {
-        var existingOrder = await context.Orders
-            .Include(o => o.Payment)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(o => o.OrderId == order.OrderId || o.EventId == order.EventId, cancellationToken);
+        // Check if order already exists using repository
+        var existingOrder = await orderRepository.GetOrderWithPaymentAsync(order.OrderId, order.EventId, cancellationToken);
 
         if (existingOrder != null)
         {
@@ -27,30 +29,34 @@ public class OrderProcessingService(CheckoutsDbContext context, ILogger<OrderPro
             return (existingOrder, existingOrder.Payment!);
         }
 
-
+        // Use transaction for atomic operation across both entities
         await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
         try
         {
+            // Set timestamps
             order.ProcessedAt = payment.CreatedAt = DateTime.UtcNow;
 
-            context.Orders.Add(order);
+            // Save order without committing changes yet
+            var savedOrder = await orderRepository.SaveOrderAsync(order, saveChanges: false, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
-
+            
             logger.LogInformation("Order saved in transaction: OrderId={OrderId}, ID={Id}",
-                order.OrderId, order.Id);
+                savedOrder.OrderId, savedOrder.Id);
 
-            context.Payments.Add(payment);
+            // Save payment without committing changes yet
+            var savedPayment = await paymentRepository.SavePaymentAsync(payment, saveChanges: false, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation(
                 "Payment saved in transaction: OrderId={OrderId}, TransactionId={TransactionId}, ID={Id}",
-                payment.OrderId, payment.TransactionId, payment.Id);
+                savedPayment.OrderId, savedPayment.TransactionId, savedPayment.Id);
 
+            // Commit the transaction
             await transaction.CommitAsync(cancellationToken);
 
             logger.LogInformation("Transaction committed successfully for OrderId: {OrderId}", order.OrderId);
 
-            return (order, payment);
+            return (savedOrder, savedPayment);
         }
         catch (Exception ex)
         {

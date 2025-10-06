@@ -9,6 +9,11 @@ public class PaymentRepository(CheckoutsDbContext context, ILogger<PaymentReposi
 {
     public async Task<Payment> SavePaymentAsync(Payment payment, CancellationToken cancellationToken = default)
     {
+        return await SavePaymentAsync(payment, saveChanges: true, cancellationToken);
+    }
+
+    public async Task<Payment> SavePaymentAsync(Payment payment, bool saveChanges, CancellationToken cancellationToken = default)
+    {
         try
         {
             // Check if payment already exists to prevent duplicates
@@ -28,7 +33,11 @@ public class PaymentRepository(CheckoutsDbContext context, ILogger<PaymentReposi
             payment.CreatedAt = DateTime.UtcNow;
 
             context.Payments.Add(payment);
-            await context.SaveChangesAsync(cancellationToken);
+            
+            if (saveChanges)
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
 
             logger.LogInformation("Successfully saved payment for OrderId {OrderId} with ID {Id}", payment.OrderId,
                 payment.Id);
