@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCP.Server", "MCP.Server\MC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCP.Host", "MCP.Host\MCP.Host.csproj", "{F28A0304-94DA-4205-91EE-E06D87F13EF4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.ServiceDefaults", "Demo.ServiceDefaults\Demo.ServiceDefaults.csproj", "{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,18 @@ Global
 		{F28A0304-94DA-4205-91EE-E06D87F13EF4}.Release|x64.Build.0 = Release|Any CPU
 		{F28A0304-94DA-4205-91EE-E06D87F13EF4}.Release|x86.ActiveCfg = Release|Any CPU
 		{F28A0304-94DA-4205-91EE-E06D87F13EF4}.Release|x86.Build.0 = Release|Any CPU
+		{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}.Debug|x64.Build.0 = Debug|Any CPU
+		{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}.Debug|x86.Build.0 = Debug|Any CPU
+		{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}.Release|x64.ActiveCfg = Release|Any CPU
+		{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}.Release|x64.Build.0 = Release|Any CPU
+		{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}.Release|x86.ActiveCfg = Release|Any CPU
+		{9F7F2EA8-D6AA-4ED0-AE5A-16C6A0F1357A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

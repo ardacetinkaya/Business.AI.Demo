@@ -44,4 +44,8 @@
         <Using Include="ModelContextProtocol.Server"/>
         <Using Include="System.ComponentModel"/>
     </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Demo.ServiceDefaults\Demo.ServiceDefaults.csproj" />
+    </ItemGroup>
 </Project>

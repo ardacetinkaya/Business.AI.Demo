@@ -34,6 +34,8 @@ builder.Services
     .WithTools<RandomNumberTools>()
     .WithTools<PaymentsTools>();
 
+builder.AddServiceDefaults();
+
 var app = builder.Build();
 
 app.MapMcp();

@@ -5,32 +5,21 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-var hostBuilder = Host.CreateDefaultBuilder(args)
-    .ConfigureAppConfiguration((context, config) =>
-    {
-        config.SetBasePath(Directory.GetCurrentDirectory())
-              .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-              .AddEnvironmentVariables();
-    })
-    .ConfigureServices((context, services) =>
-    {
-        services.Configure<KafkaSettings>(context.Configuration.GetSection(KafkaSettings.SectionName));
+var builder = Host.CreateApplicationBuilder(args);
 
-        // Register services
-        services.AddSingleton<IProducerService, KafkaProducerService>();
-        
-        // Register background services
-        services.AddHostedService<OrderEventGeneratorService>();
-    })
-    .ConfigureLogging((context, logging) =>
-    {
-        logging.ClearProviders();
-        logging.AddConsole();
-        logging.AddConfiguration(context.Configuration.GetSection("Logging"));
-    })
-    .UseConsoleLifetime();
+builder.AddServiceDefaults();
 
-var host = hostBuilder.Build();
+// Configure strongly-typed settings
+builder.Services.Configure<KafkaSettings>(
+    builder.Configuration.GetSection(KafkaSettings.SectionName));
+
+// Register services
+builder.Services.AddSingleton<IProducerService, KafkaProducerService>();
+
+// Register background services
+builder.Services.AddHostedService<OrderEventGeneratorService>();
+
+var host = builder.Build();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 

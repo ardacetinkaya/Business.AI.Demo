@@ -48,6 +48,8 @@ builder.Services
 
 builder.Services.AddEmbeddingGenerator(embeddingGenerator);
 
+builder.AddServiceDefaults();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
