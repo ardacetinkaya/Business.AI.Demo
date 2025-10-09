@@ -47,12 +47,9 @@ public sealed class McpHttpClient : IDisposable
             }
         };
 
-        using var msg = NewMessage(req);
-        using var resp = await _http.SendAsync(msg, ct);
-        resp.EnsureSuccessStatusCode();
-
-        //TODO: parse result + adjust _protocolVersion if server negotiated down
-
+        using var message = NewMessage(req);
+        using var response = await _http.SendAsync(message, ct);
+        response.EnsureSuccessStatusCode();
     }
 
     public record McpTool(string Name, string? Description, JsonElement InputSchema);
@@ -77,7 +74,7 @@ public sealed class McpHttpClient : IDisposable
         {
             if (line.StartsWith("data:"))
             {
-                var json = line.Substring("data:".Length).Trim();
+                var json = line["data:".Length..].Trim();
                 var doc = JsonDocument.Parse(json);
                 toolsElement = doc.RootElement.GetProperty("result").GetProperty("tools");
                 break;
@@ -121,7 +118,7 @@ public sealed class McpHttpClient : IDisposable
         {
             if (line.StartsWith("data:"))
             {
-                var json = line.Substring("data:".Length).Trim();
+                var json = line["data:".Length..].Trim();
                 var doc = JsonDocument.Parse(json);
                 toolResult = doc.RootElement;
                 break;
