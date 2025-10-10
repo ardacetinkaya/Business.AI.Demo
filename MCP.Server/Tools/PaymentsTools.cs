@@ -12,7 +12,7 @@ internal class PaymentsTools(ILogger<PaymentsTools> logger, IPaymentRepository p
 {
     [McpServerTool]
     [Description("Returns recent payment transactions from the payment system")]
-    public async Task<object> GetRecentPayments()
+    public async Task<object> GetRecentPayments([Description("Number of payments")] int count = 7)
     {
         const string cacheKey = "recent_payments";
         
@@ -28,8 +28,8 @@ internal class PaymentsTools(ILogger<PaymentsTools> logger, IPaymentRepository p
                 return cachedPayments ?? new List<object>();
             }
 
-            logger.LogInformation("Retrieving recent payments from repository");
-            var result = await paymentRepository.GetRecentPaymentsAsync(7);
+            logger.LogInformation("Retrieving recent {Count} payments from repository",count);
+            var result = await paymentRepository.GetRecentPaymentsAsync(count);
             var payments = result.ToList();
             
             // Cache the result
