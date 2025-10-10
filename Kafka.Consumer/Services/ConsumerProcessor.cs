@@ -37,7 +37,7 @@ public class ConsumerService(
 
             // Map to Order and Payment entities
             var order = MapToOrder(orderEvent);
-            var payment = MapToPayment(orderEvent, feeCalculator);
+            var payment = await MapToPaymentAsync(orderEvent, feeCalculator, cancellationToken);
             
             // Process order and payment in a single transaction
             var (savedOrder, savedPayment) = await orderProcessingService.ProcessOrderWithPaymentAsync(order, payment, cancellationToken);
@@ -94,10 +94,10 @@ public class ConsumerService(
         };
     }
 
-    private static Payment MapToPayment(OrderSubmittedEventDto orderEvent, IPaymentFeeCalculator feeCalculator)
+    private static async Task<Payment> MapToPaymentAsync(OrderSubmittedEventDto orderEvent, IPaymentFeeCalculator feeCalculator, CancellationToken cancellationToken)
     {
         // Calculate fee based on payment method and order amount
-        var (feePercentage, feeAmount) = feeCalculator.CalculateFee(orderEvent.Payment.PaymentMethod, orderEvent.TotalAmount);
+        var (feePercentage, feeAmount) = await feeCalculator.CalculateFeeAsync(orderEvent.Payment.PaymentMethod, orderEvent.TotalAmount, cancellationToken);
 
         return new Payment
         {

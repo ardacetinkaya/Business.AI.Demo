@@ -73,32 +73,35 @@ A web interface where users can chat with AI about their business data.
                                      │ manages development environment
                                      ▼
  ─────────────────────────────────────────────────────────────────────────────────────────────────────────
-              ┌─────────────────┐                    ┌───────────────────┐    PostgreSQL
-              │     Producer    │                    │      Consumer     │  ┌─────────────┐
-              │                 │                    │                   │  │   Orders    │
-              │ - Order Events  │                    │ - Event Processing│─►│   Table     │
-              │ - Mock Data     │                    │ - Business Logic  │  │             │
-              │ - Publishing    │                    │ - Data Storage    │  ├─────────────┤
-              └─────────────────┘                    └───────────────────┘  │  Payments   │
-                     │                                         ▲            │   Table     │
-                     │           ┌─────────────────┐           │            └─────────────┘
-                     │           │     Kafka       │           │                 │
-                     │           │                 │           │                 │
-                     └─────────► │ - Topics        │ ──────────┘                 │
-                                 │   - order-events│                             │
-                                 │                 │                             │
-                                 └─────────────────┘               provides data │
-                                                                                 │ 
-                                                                                 │
-                                                                                 │
-                                                                                 │
-              ┌─────────────────┐                                                │
-              │    MCP.Server   │                                                │
-              │                 │◄───────────────────────────────────────────────┘
-              │ - Business APIs │
-              │ - Data Caching  │               
-              │ - MCP Tools     │             ┌─────────────────┐
-              └─────────────────┘────────────►│   Cache(Valkey) │
+              ┌─────────────────┐                    ┌───────────────────┐     PostgreSQL
+              │     Producer    │                    │      Consumer     │   ┌─────────────┐
+              │                 │                    │                   │   │   Orders    │
+              │ - Order Events  │                    │ - Event Processing│──►│   Table     │
+              │ - Mock Data     │                    │ - Business Logic  │   │             │
+              │ - Publishing    │                    │ - Data Storage    │   ├─────────────┤
+              └─────────────────┘                    └───────────────────┘   │  Payments   │
+                     │                                         ▲  │          │   Table     │
+                     │                                         │  │          ├─────────────┤
+                     │                                         │  │          │   Fees      │
+                     │                                         │  │          │   Table     │
+                     │           ┌─────────────────┐           │  │          └─────────────┘
+                     │           │     Kafka       │           │  │                │
+                     │           │                 │           │  │                │
+                     └─────────► │ - Topics        │ ──────────┘  │                │
+                                 │   - order-events│              │                │
+                                 │                 │              │                │
+                                 └─────────────────┘              │   provides data│
+                                                                  │                │ 
+                                                                  │                │
+                                                                  │                │
+                                                                  │                │
+              ┌─────────────────┐                                 │                │
+              │    MCP.Server   │                                 │                │
+              │                 │◄────────────────────────────────)────────────────┘
+              │ - Business APIs │                                 │
+              │ - Data Caching  │                                 │
+              │ - MCP Tools     │             ┌─────────────────┐ │ 
+              └─────────────────┘────────────►│   Cache(Valkey) │◄┘
                        │                      │                 │
                        │                      │                 │
                        │                      │                 │

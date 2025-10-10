@@ -43,6 +43,7 @@ builder.Eventing.Subscribe<ResourceReadyEvent>(kafka.Resource, async (@event, ct
 
 var consumer = builder.AddProject<Projects.Kafka_Consumer>("kafka-consumer")
     .WithReference(database)
+    .WithReference(cache)
     .WithEnvironment(context =>
     {
         // Additional individual connection details as environment variables

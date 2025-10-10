@@ -23,6 +23,8 @@ if (string.IsNullOrEmpty(connectionString))
     throw new InvalidOperationException("Orders connection string is not configured.");
 }
 
+builder.AddRedisDistributedCache(connectionName: "cache");
+
 builder.Services.AddDbContext<CheckoutsDbContext>(options =>
 {
     options.UseNpgsql(connectionString);
@@ -33,6 +35,8 @@ builder.Services.AddDbContext<CheckoutsDbContext>(options =>
 // Register repositories
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPaymentMethodFeeRepository, PaymentMethodFeeRepository>();
+
 
 // Register services
 builder.Services.AddScoped<IPaymentFeeCalculator, PaymentFeeCalculator>();

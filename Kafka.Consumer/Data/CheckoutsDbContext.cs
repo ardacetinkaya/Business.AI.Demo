@@ -7,6 +7,7 @@ public class CheckoutsDbContext(DbContextOptions<CheckoutsDbContext> options) : 
 {
     public DbSet<Order> Orders { get; set; }
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<PaymentMethodFee> PaymentMethodFees { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -120,6 +121,47 @@ public class CheckoutsDbContext(DbContextOptions<CheckoutsDbContext> options) : 
                 .HasForeignKey<Payment>(p => p.OrderId)
                 .HasPrincipalKey<Order>(o => o.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PaymentMethodFee>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            
+            entity.Property(e => e.PaymentMethod)
+                .IsRequired()
+                .HasMaxLength(50);
+            
+            entity.Property(e => e.FeePercentage)
+                .HasColumnType("decimal(5,3)")
+                .IsRequired();
+            
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true);
+            
+            entity.Property(e => e.CreatedAt)
+                .IsRequired();
+            
+            entity.Property(e => e.UpdatedAt)
+                .IsRequired();
+
+            // Add indexes for better query performance
+            entity.HasIndex(e => e.PaymentMethod).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.CreatedAt);
+
+            // Seed data
+            var now = DateTime.UtcNow;
+            entity.HasData(
+                new PaymentMethodFee { Id = 1, PaymentMethod = "CreditCard", FeePercentage = 2.0m, IsActive = true, CreatedAt = now, UpdatedAt = now },
+                new PaymentMethodFee { Id = 2, PaymentMethod = "DebitCard", FeePercentage = 0.9m, IsActive = true, CreatedAt = now, UpdatedAt = now },
+                new PaymentMethodFee { Id = 3, PaymentMethod = "PayPal", FeePercentage = 1.5m, IsActive = true, CreatedAt = now, UpdatedAt = now },
+                new PaymentMethodFee { Id = 4, PaymentMethod = "ApplePay", FeePercentage = 1.2m, IsActive = true, CreatedAt = now, UpdatedAt = now },
+                new PaymentMethodFee { Id = 5, PaymentMethod = "GooglePay", FeePercentage = 1.1m, IsActive = true, CreatedAt = now, UpdatedAt = now },
+                new PaymentMethodFee { Id = 6, PaymentMethod = "BankTransfer", FeePercentage = 0.8m, IsActive = true, CreatedAt = now, UpdatedAt = now },
+                new PaymentMethodFee { Id = 7, PaymentMethod = "Swish", FeePercentage = 0.7m, IsActive = true, CreatedAt = now, UpdatedAt = now },
+                new PaymentMethodFee { Id = 8, PaymentMethod = "Unknown", FeePercentage = 1.5m, IsActive = true, CreatedAt = now, UpdatedAt = now }
+            );
         });
     }
 }
