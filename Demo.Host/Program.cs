@@ -70,7 +70,7 @@ var mcpServer = builder.AddProject<Projects.MCP_Server>("mcp-server")
     .WaitFor(database);
 
 
-var githubModelsToken = builder.AddParameter("githubmodels-token");
+var githubModelsToken = builder.AddParameter("model-token");
 var mcpHost = builder.AddProject<Projects.MCP_Host>("mcp-host")
     .WithEnvironment(context =>
     {
