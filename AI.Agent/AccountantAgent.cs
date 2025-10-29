@@ -20,8 +20,9 @@ public sealed class AccountantAgent : AIAgent
     public override async Task<AgentRunResponse> RunAsync(IEnumerable<ChatMessage> messages, AgentThread? thread = null, AgentRunOptions? options = null, CancellationToken cancellationToken = default)
     {
         thread ??= this.GetNewThread();
-        List<ChatMessage> responseMessages = CloneAndToUpperCase(messages, this.DisplayName).ToList();
-        await NotifyThreadOfNewMessagesAsync(thread, messages.Concat(responseMessages), cancellationToken);
+        IEnumerable<ChatMessage> chatMessages = messages as ChatMessage[] ?? messages.ToArray();
+        List<ChatMessage> responseMessages = CloneAndToUpperCase(chatMessages, this.DisplayName).ToList();
+        await NotifyThreadOfNewMessagesAsync(thread, chatMessages.Concat(responseMessages), cancellationToken);
         return new AgentRunResponse
         {
             AgentId = this.Id,

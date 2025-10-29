@@ -36,7 +36,7 @@ var thread = agent.GetNewThread();
 var tool = McpServerTool.Create(agent.AsAIFunction(
     new Microsoft.Extensions.AI.AIFunctionFactoryOptions
     {
-        Name = "Accountant_Agent_Does_Financial_Calculations".ToLowerInvariant(),
+        Name = "accountant_does_financial_calculations",
         Description = "Accountant Agent that can perform financial calculations for net amounts for orders payments",
     }, thread
 ));

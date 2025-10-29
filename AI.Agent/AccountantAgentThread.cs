@@ -6,12 +6,29 @@ namespace AI.Agent;
 
 internal sealed class AccountantAgentThread : InMemoryAgentThread
 {
-    internal AccountantAgentThread() : base() { }
-    internal AccountantAgentThread(JsonElement serializedThreadState, JsonSerializerOptions? jsonSerializerOptions = null)
-        : base(serializedThreadState, jsonSerializerOptions) { }
+    private readonly string _filePath;
 
-    protected override Task MessagesReceivedAsync(IEnumerable<ChatMessage> newMessages, CancellationToken cancellationToken = new CancellationToken())
+    internal AccountantAgentThread() : base()
     {
-        return base.MessagesReceivedAsync(newMessages, cancellationToken);
+        var dir = Path.Combine(AppContext.BaseDirectory, "thread");
+        Directory.CreateDirectory(dir);
+        _filePath = Path.Combine(dir, "agent_thread.json");
+    }
+
+    internal AccountantAgentThread(JsonElement serializedThreadState, JsonSerializerOptions? jsonSerializerOptions = null)
+        : base(serializedThreadState, jsonSerializerOptions)
+    {
+        var dir = Path.Combine(AppContext.BaseDirectory, "thread");
+        Directory.CreateDirectory(dir);
+        _filePath = Path.Combine(dir, "agent_thread.json");
+    }
+
+    protected override async Task MessagesReceivedAsync(IEnumerable<ChatMessage> newMessages, CancellationToken cancellationToken = new CancellationToken())
+    {
+        var serializedJson = this.Serialize(JsonSerializerOptions.Web).GetRawText();
+
+        await File.WriteAllTextAsync(_filePath, serializedJson, cancellationToken);
+
+        await base.MessagesReceivedAsync(newMessages, cancellationToken);
     }
 }
