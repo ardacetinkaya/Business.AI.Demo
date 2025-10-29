@@ -1,17 +1,20 @@
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
-public sealed class CustomAgent : AIAgent
+namespace AI.Agent;
+
+public sealed class AccountantAgent : AIAgent
 {
     public override AgentThread DeserializeThread(JsonElement serializedThread, JsonSerializerOptions? jsonSerializerOptions = null)
     {
-        return new CustomAgentThread(serializedThread, jsonSerializerOptions);
+        return new AccountantAgentThread(serializedThread, jsonSerializerOptions);
     }
 
     public override AgentThread GetNewThread()
     {
-        return new CustomAgentThread();
+        return new AccountantAgentThread();
     }
 
     public override async Task<AgentRunResponse> RunAsync(IEnumerable<ChatMessage> messages, AgentThread? thread = null, AgentRunOptions? options = null, CancellationToken cancellationToken = default)
@@ -27,11 +30,12 @@ public sealed class CustomAgent : AIAgent
         };
     }
 
-    public override async IAsyncEnumerable<AgentRunResponseUpdate> RunStreamingAsync(IEnumerable<ChatMessage> messages, AgentThread? thread = null, AgentRunOptions? options = null, CancellationToken cancellationToken = default)
+    public override async IAsyncEnumerable<AgentRunResponseUpdate> RunStreamingAsync(IEnumerable<ChatMessage> messages, AgentThread? thread = null, AgentRunOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         thread ??= this.GetNewThread();
-        List<ChatMessage> responseMessages = CloneAndToUpperCase(messages, this.DisplayName).ToList();
-        await NotifyThreadOfNewMessagesAsync(thread, messages.Concat(responseMessages), cancellationToken);
+        IEnumerable<ChatMessage> chatMessages = messages as ChatMessage[] ?? messages.ToArray();
+        List<ChatMessage> responseMessages = CloneAndToUpperCase(chatMessages, this.DisplayName).ToList();
+        await NotifyThreadOfNewMessagesAsync(thread, chatMessages.Concat(responseMessages), cancellationToken);
         foreach (var message in responseMessages)
         {
             yield return new AgentRunResponseUpdate

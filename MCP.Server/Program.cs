@@ -1,3 +1,4 @@
+using AI.Agent;
 using MCP.Server.Data;
 using MCP.Server.Repositories;
 using MCP.Server.Tools;
@@ -30,21 +31,22 @@ builder.Services.AddDbContext<CheckoutsDbContext>(options =>
     options.EnableDetailedErrors(builder.Environment.IsDevelopment());
 });
 
-Microsoft.Agents.AI.AIAgent agent = new CustomAgent();
+Microsoft.Agents.AI.AIAgent agent = new AccountantAgent();
+var thread = agent.GetNewThread();
 var tool = McpServerTool.Create(agent.AsAIFunction(
     new Microsoft.Extensions.AI.AIFunctionFactoryOptions
     {
-        Name = "CustomUpperCaseTool",
-        Description = "A custom tool that converts input text to uppercase.",
-    }
+        Name = "Accountant_Agent_Does_Financial_Calculations".ToLowerInvariant(),
+        Description = "Accountant Agent that can perform financial calculations for net amounts for orders payments",
+    }, thread
 ));
-Console.WriteLine($"Registered MCP Tool: {tool.ProtocolTool.Name} from Agent: {agent.DisplayName}");
+
 builder.Services
     .AddMcpServer()
     .WithHttpTransport()
     .WithTools<RandomNumberTools>()
     .WithTools<PaymentsTools>()
-    .WithTools(tool);
+    .WithTools([tool]);
 
 builder.AddServiceDefaults();
 
