@@ -253,3 +253,7 @@ A web interface where users can chat with AI about their business data.
 
 This demonstrates a practical approach to building AI-powered business applications using modern development tools and patterns with .NET.
 
+## References
+
+- https://learn.microsoft.com/en-us/dotnet/ai/
+- https://learn.microsoft.com/en-us/agent-framework/overview/agent-framework-overview

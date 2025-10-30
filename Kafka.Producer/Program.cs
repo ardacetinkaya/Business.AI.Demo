@@ -13,6 +13,8 @@ builder.AddServiceDefaults();
 builder.Services.Configure<KafkaSettings>(
     builder.Configuration.GetSection(KafkaSettings.SectionName));
 
+builder.AddRedisDistributedCache(connectionName: "cache");
+
 // Register services
 builder.Services.AddSingleton<ProductRepository>();
 builder.Services.AddSingleton<IProducerService, KafkaProducerService>();

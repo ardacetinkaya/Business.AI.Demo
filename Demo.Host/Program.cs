@@ -54,6 +54,7 @@ var consumer = builder.AddProject<Projects.Kafka_Consumer>("kafka-consumer")
     .WaitFor(database);
 
 var producer = builder.AddProject<Projects.Kafka_Producer>("kafka-producer")
+    .WithReference(cache)
     .WithEnvironment(context =>
     {
         // Additional individual connection details as environment variables
