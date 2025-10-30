@@ -1,4 +1,4 @@
-﻿using Kafka.Producer.Configuration;
+﻿﻿using Kafka.Producer.Configuration;
 using Kafka.Producer.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +14,7 @@ builder.Services.Configure<KafkaSettings>(
     builder.Configuration.GetSection(KafkaSettings.SectionName));
 
 // Register services
+builder.Services.AddSingleton<ProductRepository>();
 builder.Services.AddSingleton<IProducerService, KafkaProducerService>();
 
 // Register background services
