@@ -43,13 +43,104 @@ Processes incoming order events and stores them in the database for later use.
 - Stores order and payment data in PostgreSQL
 - Handles business logic like fee calculations
 
+### 🧠 **AI.Agent**
+A custom AI agent implementation(just some dummy agent) using Microsoft's Agent Framework, exposed as an MCP tool for learning and experimentation.
+
+**Features:**
+- Implements `AccountantAgent` using Microsoft Agent Framework
+- Maintains conversation context through persistent thread storage
+- Thread state is preserved across application restarts in `{BaseDirectory}/thread/agent_thread.json`
+
+**Key Components:**
+- `AccountantAgent`: Custom agent implementation with thread persistence
+- `AccountantAgentThread`: Thread management with JSON serialization/deserialization
+- Thread reuse: Automatically loads existing threads on startup to maintain conversation history
+
 ### 🤖 **MCP.Server**
-Provides AI tools that can access business data stored in the database.
+Provides AI tools that can access business data stored in the database and hosts the custom AI agent.
 
 **Features:**
 - Exposes business data through MCP protocol
+- Hosts the `AccountantAgent` as an MCP tool
 - Allows AI to retrieve recent payments
 - Caches frequently accessed data for performance
+
+#### Listing Tools for MCP Server ####
+```bash
+curl -X POST https://localhost:5001/ \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-06-18' \
+  -d '{
+    "jsonrpc":"2.0",
+    "id":2,
+    "method":"tools/list",
+    "params":{}
+  }'
+```
+
+#### Result ####
+```bash
+event: message
+data: {
+    "result": {
+        "tools": [
+            {
+                "name": "get_random_number",
+                "description": "Generates a random number between the specified minimum and maximum values.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "min": {
+                            "description": "Minimum value (inclusive)",
+                            "type": "integer",
+                            "default": 0
+                        },
+                        "max": {
+                            "description": "Maximum value (exclusive)",
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                }
+            },
+            {
+                "name": "accountant_does_financial_calculations",
+                "description": "Accountant Agent that can perform financial calculations for net amounts for orders payments",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "description": "Input query to invoke the agent.",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "query"
+                    ]
+                }
+            },
+            {
+                "name": "get_recent_payments",
+                "description": "Returns recent payment transactions from the payment system",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "count": {
+                            "description": "Number of payments",
+                            "type": "integer",
+                            "default": 7
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "id": 2,
+    "jsonrpc": "2.0"
+}
+
+```
 
 ### 💬 **MCP.Host**
 A web interface where users can chat with AI about their business data.
@@ -87,26 +178,38 @@ A web interface where users can chat with AI about their business data.
                      │           ┌─────────────────┐           │  │          └─────────────┘
                      │           │     Kafka       │           │  │                │
                      │           │                 │           │  │                │
-                     └─────────► │ - Topics        │ ──────────┘  │                │
-                                 │   - order-events│              │                │
-                                 │                 │              │                │
-                                 └─────────────────┘              │   provides data│
-                                                                  │                │ 
-                                                                  │                │
-                                                                  │                │
-                                                                  │                │
-              ┌─────────────────┐                                 │                │
-              │    MCP.Server   │                                 │                │
-              │                 │◄────────────────────────────────)────────────────┘
-              │ - Business APIs │                                 │
-              │ - Data Caching  │                                 │
-              │ - MCP Tools     │             ┌─────────────────┐ │ 
-              └─────────────────┘────────────►│   Cache(Valkey) │◄┘
-                       │                      │                 │
-                       │                      │                 │
-                       │                      │                 │
-                       │                      │                 │
-                       │                      └─────────────────┘   
+                     └─────────► │ - Topics        │ ──────────┘                   │
+                                 │   - order-events│                               │
+                                 │                 │                               │
+                                 └─────────────────┘                  provides data│
+                                                                                   │ 
+                                                                                   │
+┌──────────────────┐                                                               │ 
+│   AI.Agent       │                                                               │     
+│ (AccountantAgent)│                                                               │
+│                  │                                                               │ 
+│ - Agent Framework│                                                               │
+│ - Thread State   │───────┐                                                       │ 
+│ - Persistence    │       │Agent used as a tool                                   │
+└──────────────────┘       │                                                       │ 
+                           │                                                       │                                              
+                           │                                                       │                
+                           ▼                                                       │                
+              ┌─────────────────┐                                                  │
+              │    MCP.Server   │                                                  │
+              │                 │◄─────────────────────────────────────────────────┘
+              │ - Business APIs │                 
+              │ - Data Caching  │                 
+              │ - MCP Tools     │                  
+              │ - Agent Hosting │                 
+              └─────────────────┘───┐                 
+                       │            │                                 
+                       │            │                                 
+                       │            │     ┌─────────────────┐         
+                       │            └────►│   Cache(Valkey) │
+                       │                  │                 │
+                       │                  │                 │
+                       │                  └─────────────────┘   
                        │
                        │
                        │ MCP protocol
@@ -135,26 +238,6 @@ A web interface where users can chat with AI about their business data.
 <img src="Assets/PostgreSQL.png" width="70%">
 
 3. **AI Access**: An MCP Server exposes business data through standardized APIs within .NET Platform. It is a remote MCP endpoint. .NET Platform has a template to create a minimal MCP Server: `dotnet new mcpserver`
-
-#### Listing Tools for MCP Server ####
-```bash
-curl -X POST https://localhost:5001/ \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json, text/event-stream' \
-  -H 'MCP-Protocol-Version: 2025-06-18' \
-  -d '{
-    "jsonrpc":"2.0",
-    "id":2,
-    "method":"tools/list",
-    "params":{}
-  }'
-```
-
-#### Result ####
-```bash
-event: message
-data: {"result":{"tools":[{"name":"get_random_number","description":"Generates a random number between the specified minimum and maximum values.","inputSchema":{"type":"object","properties":{"min":{"description":"Minimum value (inclusive)","type":"integer","default":0},"max":{"description":"Maximum value (exclusive)","type":"integer","default":100}}}},{"name":"get_recent_payments","description":"Returns recent payment transactions from the payment system","inputSchema":{"type":"object","properties":{}}}]},"id":2,"jsonrpc":"2.0"}
-```
 
 
 4. **User Interaction**: Users chat with AI through the web interface to get insights about their business data. Based on one of .NET templates: `dotnet new aichatweb` For this demonstration, `gpt-4o-mini` is used via `GitHub Models` 
