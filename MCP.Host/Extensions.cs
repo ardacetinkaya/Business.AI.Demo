@@ -14,7 +14,7 @@ public static class Extensions
             return new McpHttpClient(http, builder.Configuration["MCPServer:Endpoint"] ?? throw new InvalidOperationException("Missing configuration: MCPServer:Endpoint."));
         });
 
-        builder.Services.AddSingleton<IMcpToolProvider, McpToolProvider>();
+        services.AddSingleton<IMcpToolProvider, McpToolProvider>();
         return services;
     }
     
