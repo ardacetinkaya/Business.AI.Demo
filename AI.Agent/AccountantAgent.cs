@@ -14,7 +14,7 @@ public sealed class AccountantAgent : AIAgent
 
     public override AgentThread GetNewThread()
     {
-        return new AccountantAgentThread();
+        return AccountantAgentThread.LoadExistingThread() ?? new AccountantAgentThread();
     }
 
     public override async Task<AgentRunResponse> RunAsync(IEnumerable<ChatMessage> messages, AgentThread? thread = null, AgentRunOptions? options = null, CancellationToken cancellationToken = default)

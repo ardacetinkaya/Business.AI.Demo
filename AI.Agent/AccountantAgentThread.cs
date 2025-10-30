@@ -7,20 +7,40 @@ namespace AI.Agent;
 internal sealed class AccountantAgentThread : InMemoryAgentThread
 {
     private readonly string _filePath;
+    private static readonly string ThreadDirectory = Path.Combine(AppContext.BaseDirectory, "thread");
+    private static readonly string ThreadFilePath = Path.Combine(ThreadDirectory, "agent_thread.json");
 
     internal AccountantAgentThread() : base()
     {
-        var dir = Path.Combine(AppContext.BaseDirectory, "thread");
-        Directory.CreateDirectory(dir);
-        _filePath = Path.Combine(dir, "agent_thread.json");
+        Directory.CreateDirectory(ThreadDirectory);
+        _filePath = ThreadFilePath;
     }
 
     internal AccountantAgentThread(JsonElement serializedThreadState, JsonSerializerOptions? jsonSerializerOptions = null)
         : base(serializedThreadState, jsonSerializerOptions)
     {
-        var dir = Path.Combine(AppContext.BaseDirectory, "thread");
-        Directory.CreateDirectory(dir);
-        _filePath = Path.Combine(dir, "agent_thread.json");
+        Directory.CreateDirectory(ThreadDirectory);
+        _filePath = ThreadFilePath;
+    }
+    
+    public static AccountantAgentThread? LoadExistingThread()
+    {
+        if (!File.Exists(ThreadFilePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var json = File.ReadAllText(ThreadFilePath);
+            var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
+            return new AccountantAgentThread(jsonElement, JsonSerializerOptions.Web);
+        }
+        catch (Exception)
+        {
+            // If there's an error loading the thread, return null to create a new one
+            return null;
+        }
     }
 
     protected override async Task MessagesReceivedAsync(IEnumerable<ChatMessage> newMessages, CancellationToken cancellationToken = new CancellationToken())
