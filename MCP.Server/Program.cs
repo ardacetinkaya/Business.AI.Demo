@@ -1,3 +1,4 @@
+using AI.Agent;
 using MCP.Server.Data;
 using MCP.Server.Repositories;
 using MCP.Server.Tools;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Agents.AI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,11 +30,23 @@ builder.Services.AddDbContext<CheckoutsDbContext>(options =>
     options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
     options.EnableDetailedErrors(builder.Environment.IsDevelopment());
 });
+
+Microsoft.Agents.AI.AIAgent agent = new AccountantAgent();
+var thread = agent.GetNewThread();
+var tool = McpServerTool.Create(agent.AsAIFunction(
+    new Microsoft.Extensions.AI.AIFunctionFactoryOptions
+    {
+        Name = "accountant_does_financial_calculations",
+        Description = "Accountant Agent that can perform financial calculations for net amounts for orders payments",
+    }, thread
+));
+
 builder.Services
     .AddMcpServer()
     .WithHttpTransport()
     .WithTools<RandomNumberTools>()
-    .WithTools<PaymentsTools>();
+    .WithTools<PaymentsTools>()
+    .WithTools([tool]);
 
 builder.AddServiceDefaults();
 

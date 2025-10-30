@@ -1,4 +1,5 @@
 using System.ClientModel;
+using MCP.Host;
 using MCP.Host.Clients;
 using MCP.Host.Components;
 using MCP.Host.Services;
@@ -28,21 +29,14 @@ var vectorStoreConnectionString = $"Data Source={vectorStorePath}";
 builder.Services.AddSqliteCollection<string, IngestedChunk>("data-mcp_host-chunks", vectorStoreConnectionString);
 builder.Services.AddSqliteCollection<string, IngestedDocument>("data-mcp_host-documents", vectorStoreConnectionString);
 
-builder.Services.AddHttpClient("mcp"); // basic client; McpHttpClient sets headers itself
-builder.Services.AddSingleton<McpHttpClient>(sp =>
-{
-    var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient("mcp");
-    return new McpHttpClient(http, builder.Configuration["MCPServer:Endpoint"] ?? throw new InvalidOperationException("Missing configuration: MCPServer:Endpoint."));
-});
-
-builder.Services.AddSingleton<IMcpToolProvider, McpToolProvider>();
+builder.Services.AddMcpToolProvider(builder);
 
 builder.Services.AddScoped<DataIngestor>();
 builder.Services.AddSingleton<SemanticSearch>();
 
 builder.Services
     .AddChatClient(sp=>chatClient)
-    .Use((inner, sp) => new ToolAttachingChatClient(inner, sp.GetRequiredService<IMcpToolProvider>()))
+    .AddMcpTools()
     .UseFunctionInvocation()
     .UseLogging();
 
