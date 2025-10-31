@@ -47,6 +47,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Demo.ServiceDefaults\Demo.ServiceDefaults.csproj" />
-        <ProjectReference Include="..\AI.Agent\AI.Agent.csproj" />
+        <ProjectReference Include="..\AI.Agent.Custom\AI.Agent.Custom.csproj" />
     </ItemGroup>
 </Project>

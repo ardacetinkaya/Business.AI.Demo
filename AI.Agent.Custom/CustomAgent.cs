@@ -3,18 +3,18 @@ using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
-namespace AI.Agent;
+namespace AI.Agent.Custom;
 
-public sealed class AccountantAgent : AIAgent
+public sealed class CustomAgent : AIAgent
 {
     public override AgentThread DeserializeThread(JsonElement serializedThread, JsonSerializerOptions? jsonSerializerOptions = null)
     {
-        return new AccountantAgentThread(serializedThread, jsonSerializerOptions);
+        return new CustomAgentThread(serializedThread, jsonSerializerOptions);
     }
 
     public override AgentThread GetNewThread()
     {
-        return AccountantAgentThread.LoadExistingThread() ?? new AccountantAgentThread();
+        return CustomAgentThread.LoadExistingThread() ?? new CustomAgentThread();
     }
 
     public override async Task<AgentRunResponse> RunAsync(IEnumerable<ChatMessage> messages, AgentThread? thread = null, AgentRunOptions? options = null, CancellationToken cancellationToken = default)

@@ -2,28 +2,28 @@ using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
-namespace AI.Agent;
+namespace AI.Agent.Custom;
 
-internal sealed class AccountantAgentThread : InMemoryAgentThread
+internal sealed class CustomAgentThread : InMemoryAgentThread
 {
     private readonly string _filePath;
     private static readonly string ThreadDirectory = Path.Combine(AppContext.BaseDirectory, "thread");
     private static readonly string ThreadFilePath = Path.Combine(ThreadDirectory, "agent_thread.json");
 
-    internal AccountantAgentThread() : base()
+    internal CustomAgentThread() : base()
     {
         Directory.CreateDirectory(ThreadDirectory);
         _filePath = ThreadFilePath;
     }
 
-    internal AccountantAgentThread(JsonElement serializedThreadState, JsonSerializerOptions? jsonSerializerOptions = null)
+    internal CustomAgentThread(JsonElement serializedThreadState, JsonSerializerOptions? jsonSerializerOptions = null)
         : base(serializedThreadState, jsonSerializerOptions)
     {
         Directory.CreateDirectory(ThreadDirectory);
         _filePath = ThreadFilePath;
     }
     
-    public static AccountantAgentThread? LoadExistingThread()
+    public static CustomAgentThread? LoadExistingThread()
     {
         if (!File.Exists(ThreadFilePath))
         {
@@ -34,7 +34,7 @@ internal sealed class AccountantAgentThread : InMemoryAgentThread
         {
             var json = File.ReadAllText(ThreadFilePath);
             var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
-            return new AccountantAgentThread(jsonElement, JsonSerializerOptions.Web);
+            return new CustomAgentThread(jsonElement, JsonSerializerOptions.Web);
         }
         catch (Exception)
         {

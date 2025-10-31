@@ -43,17 +43,17 @@ Processes incoming order events and stores them in the database for later use.
 - Stores order and payment data in PostgreSQL
 - Handles business logic like fee calculations
 
-### 🧠 **AI.Agent**
+### 🧠 **AI.Agent.Custom**
 A custom AI agent implementation(just some dummy agent) using Microsoft's Agent Framework, exposed as an MCP tool for learning and experimentation.
 
 **Features:**
-- Implements `AccountantAgent` using Microsoft Agent Framework
+- Implements `CustomAgent` using Microsoft Agent Framework
 - Maintains conversation context through persistent thread storage
 - Thread state is preserved across application restarts in `{BaseDirectory}/thread/agent_thread.json`
 
 **Key Components:**
-- `AccountantAgent`: Custom agent implementation with thread persistence
-- `AccountantAgentThread`: Thread management with JSON serialization/deserialization
+- `CustomAgent`: Custom agent implementation with thread persistence
+- `CustomAgentThread`: Thread management with JSON serialization/deserialization
 - Thread reuse: Automatically loads existing threads on startup to maintain conversation history
 
 ### 🤖 **MCP.Server**
@@ -61,7 +61,7 @@ Provides AI tools that can access business data stored in the database and hosts
 
 **Features:**
 - Exposes business data through MCP protocol
-- Hosts the `AccountantAgent` as an MCP tool
+- Hosts the `CustomAgent` as an MCP tool
 - Allows AI to retrieve recent payments
 - Caches frequently accessed data for performance
 
@@ -185,16 +185,16 @@ A web interface where users can chat with AI about their business data.
                                                                                    │ 
                                                                                    │
 ┌──────────────────┐                                                               │ 
-│   AI.Agent       │                                                               │     
-│ (AccountantAgent)│                                                               │
+│     AI.Agent     │                                                               │     
+│  (CustomAgent)   │                                                               │
 │                  │                                                               │ 
 │ - Agent Framework│                                                               │
 │ - Thread State   │───────┐                                                       │ 
 │ - Persistence    │       │Agent used as a tool                                   │
 └──────────────────┘       │                                                       │ 
-                           │                                                       │                                              
-                           │                                                       │                
-                           ▼                                                       │                
+                           │                                                       │                                                       |
+                           │                                                       |│                                                       |
+                           |                                                       |          ▼                                                       |
               ┌─────────────────┐                                                  │
               │    MCP.Server   │                                                  │
               │                 │◄─────────────────────────────────────────────────┘

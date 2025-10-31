@@ -1,4 +1,4 @@
-using AI.Agent;
+using AI.Agent.Custom;
 using MCP.Server.Data;
 using MCP.Server.Repositories;
 using MCP.Server.Tools;
@@ -31,7 +31,7 @@ builder.Services.AddDbContext<CheckoutsDbContext>(options =>
     options.EnableDetailedErrors(builder.Environment.IsDevelopment());
 });
 
-Microsoft.Agents.AI.AIAgent agent = new AccountantAgent();
+Microsoft.Agents.AI.AIAgent agent = new CustomAgent();
 var thread = agent.GetNewThread();
 var tool = McpServerTool.Create(agent.AsAIFunction(
     new Microsoft.Extensions.AI.AIFunctionFactoryOptions
