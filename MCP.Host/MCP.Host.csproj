@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Demo.ServiceDefaults\Demo.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\AI.Agent.ProductRepository\AI.Agent.ProductRepository.csproj" />
   </ItemGroup>
 
 </Project>
