@@ -1,9 +1,11 @@
 using System.ClientModel;
+using AI.Agent.ProductRepository;
 using MCP.Host;
 using MCP.Host.Clients;
 using MCP.Host.Components;
 using MCP.Host.Services;
 using MCP.Host.Services.Ingestion;
+using Microsoft.Agents.AI.Hosting;
 using Microsoft.Extensions.AI;
 using OpenAI;
 
@@ -22,6 +24,10 @@ var openAIOptions = new OpenAIClientOptions()
 
 var ghModelsClient = new OpenAIClient(credential, openAIOptions);
 var chatClient = ghModelsClient.GetChatClient("gpt-4o-mini").AsIChatClient();
+
+builder.Services.AddScoped<ISearchLimitedStockFunctions, SearchLimitedStockFunctions>();
+builder.AddAIAgent("RepositoryAgent", ProductRepositoryAgent.CreateAgentDelegate());
+
 var embeddingGenerator = ghModelsClient.GetEmbeddingClient("text-embedding-3-small").AsIEmbeddingGenerator();
 
 var vectorStorePath = Path.Combine(AppContext.BaseDirectory, "vector-store.db");
@@ -38,6 +44,7 @@ builder.Services
     .AddChatClient(sp=>chatClient)
     .AddMcpTools()
     .UseFunctionInvocation()
+    .UseOpenTelemetry(configure: c => c.EnableSensitiveData = builder.Environment.IsDevelopment())
     .UseLogging();
 
 builder.Services.AddEmbeddingGenerator(embeddingGenerator);

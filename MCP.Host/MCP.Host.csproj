@@ -1,24 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>f47f857f-3f51-4258-a003-86bc80c95d34</UserSecretsId>
-    <RazorLangVersion>Latest</RazorLangVersion>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>f47f857f-3f51-4258-a003-86bc80c95d34</UserSecretsId>
+        <RazorLangVersion>Latest</RazorLangVersion>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.10.1-preview.1.25521.4" />
-    <PackageReference Include="Microsoft.Extensions.AI" Version="9.10.1" />
-    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.66.0" />
-    <PackageReference Include="PdfPig" Version="0.1.11" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.SqliteVec" Version="1.66.0-preview" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.10.1-preview.1.25521.4"/>
+        <PackageReference Include="Microsoft.Extensions.AI" Version="9.10.1"/>
+        <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.66.0"/>
+        <PackageReference Include="PdfPig" Version="0.1.11"/>
+        <PackageReference Include="Microsoft.SemanticKernel.Connectors.SqliteVec" Version="1.66.0-preview"/>
+        <PackageReference Include="Microsoft.Agents.AI" Version="1.0.0-preview.251028.1"/>
+        <PackageReference Include="Microsoft.Agents.AI.Abstractions" Version="1.0.0-preview.251028.1"/>
+        <PackageReference Include="Microsoft.Agents.AI.Hosting" Version="1.0.0-preview.251028.1"/>
+        <PackageReference Include="Microsoft.Agents.AI.Hosting.OpenAI" Version="1.0.0-alpha.251009.1"/>
+        <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.0.0-preview.251009.1"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Demo.ServiceDefaults\Demo.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\AI.Agent.ProductRepository\AI.Agent.ProductRepository.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Demo.ServiceDefaults\Demo.ServiceDefaults.csproj"/>
+        <ProjectReference Include="..\AI.Agent.ProductRepository\AI.Agent.ProductRepository.csproj"/>
+    </ItemGroup>
 
 </Project>
