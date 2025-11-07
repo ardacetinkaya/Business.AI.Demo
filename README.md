@@ -192,9 +192,9 @@ A web interface where users can chat with AI about their business data.
 │ - Thread State   │───────┐                                                       │ 
 │ - Persistence    │       │Agent used as a tool                                   │
 └──────────────────┘       │                                                       │ 
-                           │                                                       │                                                       |
-                           │                                                       |│                                                       |
-                           |                                                       |          ▼                                                       |
+                           │                                                       │
+                           │                                                       │
+                           |                                                       │
               ┌─────────────────┐                                                  │
               │    MCP.Server   │                                                  │
               │                 │◄─────────────────────────────────────────────────┘

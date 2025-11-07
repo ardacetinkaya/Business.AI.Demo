@@ -1,6 +1,11 @@
 ﻿@page "/"
 @using System.ComponentModel
-@inject IChatClient ChatClient
+@using System.Threading
+@inject IServiceProvider ServiceProvider
+@using Microsoft.Agents.AI
+@using Microsoft.Extensions.DependencyInjection
+@using OpenAI.Chat
+@using ChatMessage = Microsoft.Extensions.AI.ChatMessage
 @inject NavigationManager Nav
 @inject SemanticSearch Search
 @implements IDisposable
@@ -9,15 +14,15 @@
 
 <ChatHeader OnNewChat="@ResetConversationAsync" />
 
-<ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
+<ChatMessageList Messages="@_messages" InProgressMessage="@_currentResponseMessage">
     <NoMessagesContent>
 
     </NoMessagesContent>
 </ChatMessageList>
 
 <div class="chat-container">
-    <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@chatSuggestions" />
-    <ChatInput OnSend="@AddUserMessageAsync" @ref="@chatInput" />
+    <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@_chatSuggestions" />
+    <ChatInput OnSend="@AddUserMessageAsync" @ref="@_chatInput" />
 </div>
 
 @code {
@@ -31,20 +36,21 @@
         - Use get_recent_payments to retrieve payment information from the system. 
         - Use markdown table to display proper results
         ";
-
-    private int statefulMessageCount;
-    private readonly ChatOptions chatOptions = new();
-    private readonly List<ChatMessage> messages = new();
-    private CancellationTokenSource? currentResponseCancellation;
-    private ChatMessage? currentResponseMessage;
-    private ChatInput? chatInput;
-    private ChatSuggestions? chatSuggestions;
+    private AIAgent _aiAgent = null!;
+    private int _statefulMessageCount;
+    private readonly ChatOptions _chatOptions = new();
+    private readonly List<ChatMessage> _messages = [];
+    private CancellationTokenSource? _currentResponseCancellation;
+    private ChatMessage? _currentResponseMessage;
+    private ChatInput? _chatInput;
+    private ChatSuggestions? _chatSuggestions;
 
     protected override void OnInitialized()
     {
-        statefulMessageCount = 0;
-        messages.Add(new(ChatRole.System, SystemPrompt));
-        chatOptions.Tools = [AIFunctionFactory.Create(SearchAsync)];
+        _aiAgent = ServiceProvider.GetRequiredKeyedService<AIAgent>("RepositoryAgent");
+        _statefulMessageCount = 0;
+        _messages.Add(new ChatMessage(ChatRole.System, SystemPrompt));
+        _chatOptions.Tools = [AIFunctionFactory.Create(SearchAsync)];
     }
 
     private async Task AddUserMessageAsync(ChatMessage userMessage)
@@ -52,69 +58,70 @@
         CancelAnyCurrentResponse();
 
         // Add the user message to the conversation
-        messages.Add(userMessage);
-        chatSuggestions?.Clear();
-        await chatInput!.FocusAsync();
+        _messages.Add(userMessage);
+        _chatSuggestions?.Clear();
+        await _chatInput!.FocusAsync();
         
         // Stream and display a new response from the IChatClient
         var responseText = new TextContent("");
-        currentResponseMessage = new ChatMessage(ChatRole.Assistant, [responseText]);
-        currentResponseCancellation = new();
+        _currentResponseMessage = new ChatMessage(ChatRole.Assistant, [responseText]);
+        _currentResponseCancellation = new CancellationTokenSource();
         
         try
         {
-            await foreach (var update in ChatClient.GetStreamingResponseAsync(messages.Skip(statefulMessageCount), chatOptions, currentResponseCancellation.Token))
+            // await foreach (var update in ChatClient.GetStreamingResponseAsync(messages.Skip(statefulMessageCount), chatOptions, currentResponseCancellation.Token))
+            // {
+            //     messages.AddMessages(update, filter: aiContent => aiContent is not TextContent);
+            //     responseText.Text += update.Text;
+            //     chatOptions.ConversationId = update.ConversationId;
+            //     ChatMessageItem.NotifyChanged(currentResponseMessage);
+            // }
+            
+            await foreach (var update in _aiAgent.RunStreamingAsync(
+                               messages: _messages.Skip(_statefulMessageCount),
+                               cancellationToken: _currentResponseCancellation.Token))
             {
-                // Log tool calls for debugging
-                @* if (update.Contents?.OfType<FunctionCallContent>().Any() == true)
-                {
-                    var toolCalls = update.Contents.OfType<FunctionCallContent>();
-                    foreach (var toolCall in toolCalls)
-                    {
-                        Console.WriteLine($"Tool called: {toolCall.Name}");
-                    }
-                } *@
-                                
-                messages.AddMessages(update, filter: aiContent => aiContent is not TextContent);
+                var responseUpdate = update.AsChatResponseUpdate();
+                _messages.AddMessages(responseUpdate, filter: c => c is not TextContent);
                 responseText.Text += update.Text;
-                chatOptions.ConversationId = update.ConversationId;
-                ChatMessageItem.NotifyChanged(currentResponseMessage);
+                _chatOptions.ConversationId = responseUpdate.ConversationId;
+                ChatMessageItem.NotifyChanged(_currentResponseMessage);
             }
         }
         catch (Exception ex)
         {
             responseText.Text += $"\n\nError: {ex.Message}";
-            ChatMessageItem.NotifyChanged(currentResponseMessage);
+            ChatMessageItem.NotifyChanged(_currentResponseMessage);
         }
 
         // Store the final response in the conversation, and begin getting suggestions
-        messages.Add(currentResponseMessage!);
-        statefulMessageCount = chatOptions.ConversationId is not null ? messages.Count : 0;
-        currentResponseMessage = null;
-        chatSuggestions?.Update(messages);
+        _messages.Add(_currentResponseMessage!);
+        _statefulMessageCount = _chatOptions.ConversationId is not null ? _messages.Count : 0;
+        _currentResponseMessage = null;
+        _chatSuggestions?.Update(_messages);
     }
 
     private void CancelAnyCurrentResponse()
     {
         // If a response was cancelled while streaming, include it in the conversation so it's not lost
-        if (currentResponseMessage is not null)
+        if (_currentResponseMessage is not null)
         {
-            messages.Add(currentResponseMessage);
+            _messages.Add(_currentResponseMessage);
         }
 
-        currentResponseCancellation?.Cancel();
-        currentResponseMessage = null;
+        _currentResponseCancellation?.Cancel();
+        _currentResponseMessage = null;
     }
 
     private async Task ResetConversationAsync()
     {
         CancelAnyCurrentResponse();
-        messages.Clear();
-        messages.Add(new(ChatRole.System, SystemPrompt));
-        chatOptions.ConversationId = null;
-        statefulMessageCount = 0;
-        chatSuggestions?.Clear();
-        await chatInput!.FocusAsync();
+        _messages.Clear();
+        _messages.Add(new ChatMessage(ChatRole.System, SystemPrompt));
+        _chatOptions.ConversationId = null;
+        _statefulMessageCount = 0;
+        _chatSuggestions?.Clear();
+        await _chatInput!.FocusAsync();
     }
 
     [Description("Searches for information using a phrase or keyword")]
@@ -129,5 +136,5 @@
     }
 
     public void Dispose()
-        => currentResponseCancellation?.Cancel();
+        => _currentResponseCancellation?.Cancel();
 }

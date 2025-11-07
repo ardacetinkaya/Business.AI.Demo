@@ -44,7 +44,7 @@ public class SearchLimitedStockFunctions : ISearchLimitedStockFunctions
     {
         //TODO: Implement the logic to search for products with stock less than or equal to stockThreshold
         
-        return "TODO";
+        return "Monitor item is limited";
     }
 }
 
