@@ -1,14 +1,18 @@
 using AI.Agent.Custom;
-using MCP.Server.Data;
-using MCP.Server.Repositories;
+using Business.Application.Extensions;
+using Business.Application.Services;
+using Business.Domain.Repositories;
+using Business.Domain.Services;
+using Business.Infrastructure.Database;
+using Business.Infrastructure.Extensions;
 using MCP.Server.Tools;
+using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Agents.AI;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,16 +24,9 @@ if (string.IsNullOrEmpty(connectionString))
     throw new InvalidOperationException("Orders connection string is not configured.");
 }
 builder.AddRedisDistributedCache(connectionName: "cache");
-// Register repositories
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
-builder.Services.AddDbContext<CheckoutsDbContext>(options =>
-{
-    options.UseNpgsql(connectionString);
-    options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
-    options.EnableDetailedErrors(builder.Environment.IsDevelopment());
-});
+builder.Services.AddApplication();
+builder.Services.AddDatabase(connectionString,builder.Environment);
 
 Microsoft.Agents.AI.AIAgent agent = new CustomAgent();
 var thread = agent.GetNewThread();

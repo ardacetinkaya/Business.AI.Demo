@@ -1,8 +1,9 @@
-﻿using Kafka.Consumer.Configuration;
-using Kafka.Consumer.Data;
-using Kafka.Consumer.Repositories;
+﻿using Business.Infrastructure.Database;
+using Business.Infrastructure.Extensions;
+using Business.Application.Extensions;
+using Business.Application.Services;
+using Kafka.Consumer.Configuration;
 using Kafka.Consumer.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,22 +26,9 @@ if (string.IsNullOrEmpty(connectionString))
 
 builder.AddRedisDistributedCache(connectionName: "cache");
 
-builder.Services.AddDbContext<CheckoutsDbContext>(options =>
-{
-    options.UseNpgsql(connectionString);
-    options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
-    options.EnableDetailedErrors(builder.Environment.IsDevelopment());
-});
+builder.Services.AddDatabase(connectionString, builder.Environment);
 
-// Register repositories
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-builder.Services.AddScoped<IPaymentMethodFeeRepository, PaymentMethodFeeRepository>();
-
-
-// Register services
-builder.Services.AddScoped<IPaymentFeeCalculator, PaymentFeeCalculator>();
-builder.Services.AddScoped<IOrderProcessingService, OrderProcessingService>();
+builder.Services.AddOrderProcessingService();
 builder.Services.AddScoped<IConsumerService, ConsumerService>();
 
 // Register background services

@@ -46,7 +46,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Business.Infrastructure\Business.Infrastructure.csproj" />
         <ProjectReference Include="..\Demo.ServiceDefaults\Demo.ServiceDefaults.csproj" />
         <ProjectReference Include="..\AI.Agent.Custom\AI.Agent.Custom.csproj" />
+        <ProjectReference Include="..\Business.Application\Business.Application.csproj" />
     </ItemGroup>
 </Project>

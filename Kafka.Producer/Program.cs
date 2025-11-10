@@ -1,6 +1,6 @@
-﻿﻿using Kafka.Producer.Configuration;
+﻿using Business.Infrastructure.Extensions;
+using Kafka.Producer.Configuration;
 using Kafka.Producer.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -16,7 +16,7 @@ builder.Services.Configure<KafkaSettings>(
 builder.AddRedisDistributedCache(connectionName: "cache");
 
 // Register services
-builder.Services.AddSingleton<ProductRepository>();
+builder.Services.AddProductRepository();
 builder.Services.AddSingleton<IProducerService, KafkaProducerService>();
 
 // Register background services

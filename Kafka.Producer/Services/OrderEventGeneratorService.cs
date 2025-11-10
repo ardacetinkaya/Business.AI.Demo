@@ -1,5 +1,6 @@
+using Business.Domain.Events;
+using Business.Domain.Repositories;
 using Kafka.Producer.Configuration;
-using Kafka.Producer.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,7 +11,7 @@ public class OrderEventGeneratorService(
     ILogger<OrderEventGeneratorService> logger,
     IProducerService kafkaProducer,
     IOptions<KafkaSettings> kafkaSettings,
-    ProductRepository productRepository)
+    IProductRepository productRepository)
     : BackgroundService
 {
     private readonly KafkaSettings _kafkaSettings = kafkaSettings.Value;
@@ -84,7 +85,7 @@ public class OrderEventGeneratorService(
         var eventId = Guid.NewGuid().ToString();
 
         var itemCount = _random.Next(1, 4); // 1-3 items per order
-        var itemsToReserve = new List<(Product Product, int Quantity)>();
+        var itemsToReserve = new List<(Business.Domain.Entities.Product Product, int Quantity)>();
         var orderItems = new List<OrderItem>();
 
         // Try to build the order items

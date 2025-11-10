@@ -1,6 +1,8 @@
 using System.Text.Json;
+using Business.Domain.Entities;
+using Business.Domain.Events;
+using Business.Domain.Services;
 using Confluent.Kafka;
-using Kafka.Consumer.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Kafka.Consumer.Services;
@@ -27,7 +29,7 @@ public class ConsumerService(
                 message.Message.Timestamp.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss"));
 
             // Deserialize the JSON message to OrderSubmittedEventDto
-            var orderEvent = JsonSerializer.Deserialize<OrderSubmittedEventDto>(message.Message.Value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var orderEvent = JsonSerializer.Deserialize<OrderSubmittedEvent>(message.Message.Value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (orderEvent == null)
             {
@@ -69,7 +71,7 @@ public class ConsumerService(
         }
     }
 
-    private static Order MapToOrder(OrderSubmittedEventDto orderEvent)
+    private static Order MapToOrder(OrderSubmittedEvent orderEvent)
     {
         return new Order
         {
@@ -94,7 +96,7 @@ public class ConsumerService(
         };
     }
 
-    private static async Task<Payment> MapToPaymentAsync(OrderSubmittedEventDto orderEvent, IPaymentFeeCalculator feeCalculator, CancellationToken cancellationToken)
+    private static async Task<Payment> MapToPaymentAsync(OrderSubmittedEvent orderEvent, IPaymentFeeCalculator feeCalculator, CancellationToken cancellationToken)
     {
         // Calculate fee based on payment method and order amount
         var (feePercentage, feeAmount) = await feeCalculator.CalculateFeeAsync(orderEvent.Payment.PaymentMethod, orderEvent.TotalAmount, cancellationToken);
