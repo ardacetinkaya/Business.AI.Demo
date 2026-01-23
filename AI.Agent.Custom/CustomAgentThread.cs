@@ -43,12 +43,6 @@ internal sealed class CustomAgentThread : InMemoryAgentThread
         }
     }
 
-    protected override async Task MessagesReceivedAsync(IEnumerable<ChatMessage> newMessages, CancellationToken cancellationToken = new CancellationToken())
-    {
-        var serializedJson = this.Serialize(JsonSerializerOptions.Web).GetRawText();
-
-        await File.WriteAllTextAsync(_filePath, serializedJson, cancellationToken);
-
-        await base.MessagesReceivedAsync(newMessages, cancellationToken);
-    }
+    // Note: MessagesReceived override removed in API version 1.0.0-preview.260121.1
+    // Thread state persistence can be implemented differently if needed
 }

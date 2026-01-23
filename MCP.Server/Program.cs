@@ -29,7 +29,7 @@ builder.Services.AddApplication();
 builder.Services.AddDatabase(connectionString,builder.Environment);
 
 Microsoft.Agents.AI.AIAgent agent = new CustomAgent();
-var thread = agent.GetNewThread();
+var thread = await agent.GetNewThreadAsync();
 var tool = McpServerTool.Create(agent.AsAIFunction(
     new Microsoft.Extensions.AI.AIFunctionFactoryOptions
     {
