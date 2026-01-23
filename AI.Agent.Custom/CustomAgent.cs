@@ -7,47 +7,42 @@ namespace AI.Agent.Custom;
 
 public sealed class CustomAgent : AIAgent
 {
-    public override AgentThread DeserializeThread(JsonElement serializedThread, JsonSerializerOptions? jsonSerializerOptions = null)
+    public override ValueTask<AgentThread> DeserializeThreadAsync(JsonElement serializedThread, JsonSerializerOptions? jsonSerializerOptions = null, CancellationToken cancellationToken = default)
     {
-        return new CustomAgentThread(serializedThread, jsonSerializerOptions);
+        return new ValueTask<AgentThread>(new CustomAgentThread(serializedThread, jsonSerializerOptions));
     }
 
-    public override AgentThread GetNewThread()
+    public override ValueTask<AgentThread> GetNewThreadAsync(CancellationToken cancellationToken = default)
     {
-        return CustomAgentThread.LoadExistingThread() ?? new CustomAgentThread();
+        return new ValueTask<AgentThread>(CustomAgentThread.LoadExistingThread() ?? new CustomAgentThread());
     }
 
-    public override async Task<AgentRunResponse> RunAsync(IEnumerable<ChatMessage> messages, AgentThread? thread = null, AgentRunOptions? options = null, CancellationToken cancellationToken = default)
+    protected override async Task<AgentResponse> RunCoreAsync(IEnumerable<ChatMessage> messages, AgentThread? thread = null, AgentRunOptions? options = null, CancellationToken cancellationToken = default)
     {
-        thread ??= this.GetNewThread();
+        thread ??= await this.GetNewThreadAsync(cancellationToken);
         IEnumerable<ChatMessage> chatMessages = messages as ChatMessage[] ?? messages.ToArray();
-        List<ChatMessage> responseMessages = CloneAndToUpperCase(chatMessages, this.DisplayName).ToList();
-        await NotifyThreadOfNewMessagesAsync(thread, chatMessages.Concat(responseMessages), cancellationToken);
-        return new AgentRunResponse
-        {
-            AgentId = this.Id,
-            ResponseId = Guid.NewGuid().ToString(),
-            Messages = responseMessages
-        };
+        List<ChatMessage> responseMessages = CloneAndToUpperCase(chatMessages, this.Name).ToList();
+        
+        return new AgentResponse(responseMessages);
     }
 
-    public override async IAsyncEnumerable<AgentRunResponseUpdate> RunStreamingAsync(IEnumerable<ChatMessage> messages, AgentThread? thread = null, AgentRunOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    protected override async IAsyncEnumerable<AgentResponseUpdate> RunCoreStreamingAsync(IEnumerable<ChatMessage> messages, AgentThread? thread = null, AgentRunOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        thread ??= this.GetNewThread();
+        thread ??= await this.GetNewThreadAsync(cancellationToken);
         IEnumerable<ChatMessage> chatMessages = messages as ChatMessage[] ?? messages.ToArray();
-        List<ChatMessage> responseMessages = CloneAndToUpperCase(chatMessages, this.DisplayName).ToList();
-        await NotifyThreadOfNewMessagesAsync(thread, chatMessages.Concat(responseMessages), cancellationToken);
+        List<ChatMessage> responseMessages = CloneAndToUpperCase(chatMessages, this.Name).ToList();
+        
         foreach (var message in responseMessages)
         {
-            yield return new AgentRunResponseUpdate
+            foreach (var content in message.Contents)
             {
-                AgentId = this.Id,
-                AuthorName = this.DisplayName,
-                Role = ChatRole.Assistant,
-                Contents = message.Contents,
-                ResponseId = Guid.NewGuid().ToString(),
-                MessageId = Guid.NewGuid().ToString()
-            };
+                yield return new AgentResponseUpdate
+                {
+                    AuthorName = this.Name,
+                    Role = ChatRole.Assistant,
+                    Contents = [content]
+                };
+            }
         }
     }
 
@@ -55,7 +50,6 @@ public sealed class CustomAgent : AIAgent
     {
         var messageClone = x.Clone();
         messageClone.Role = ChatRole.Assistant;
-        messageClone.MessageId = Guid.NewGuid().ToString();
         messageClone.AuthorName = agentName;
         messageClone.Contents = x.Contents.Select(c => c is TextContent tc ? new TextContent(tc.Text.ToUpperInvariant())
         {

@@ -14,7 +14,7 @@ public static class ProductRepositoryAgent
             var searchFunctions = sp.GetRequiredService<ISearchLimitedStockFunctions>();
             var chatClient = sp.GetRequiredService<IChatClient>();
 
-            var aiAgent = chatClient.CreateAIAgent(
+            var aiAgent = chatClient.AsAIAgent(
                     name: key,
                     instructions: "You are a useful agent that helps business to check repository and decide if a product might be out of order so new set of product order should be placed.",
                     description: "An AI agent that manages products in repository by searching limited stock items and placing orders as needed.",
