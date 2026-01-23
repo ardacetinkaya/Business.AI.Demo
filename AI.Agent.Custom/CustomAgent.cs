@@ -54,6 +54,7 @@ public sealed class CustomAgent : AIAgent
         messageClone.Contents = x.Contents.Select(c => c is TextContent tc ? new TextContent(tc.Text.ToUpperInvariant())
         {
             AdditionalProperties = tc.AdditionalProperties,
+            Annotations = tc.Annotations,
             RawRepresentation = tc.RawRepresentation
         } : c).ToList();
         return messageClone;
