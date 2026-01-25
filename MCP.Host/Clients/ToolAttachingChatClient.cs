@@ -70,9 +70,9 @@ public sealed class ToolAttachingChatClient(IChatClient inner, IMcpToolProvider 
         }
         
         // If there was an initial error, yield it and stop
-        if (hasInitialError && initialErrorUpdate is not null)
+        if (hasInitialError)
         {
-            yield return initialErrorUpdate;
+            yield return initialErrorUpdate!;
             yield break;
         }
 
@@ -120,8 +120,8 @@ public sealed class ToolAttachingChatClient(IChatClient inner, IMcpToolProvider 
         }
         
         // Yield error update if there was an error
-        if (hasError && errorUpdate is not null)
-            yield return errorUpdate;
+        if (hasError)
+            yield return errorUpdate!;
     }
 
 
