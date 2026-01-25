@@ -3,7 +3,7 @@ using Microsoft.Extensions.AI;
 
 namespace MCP.Host.Clients;
 
-public sealed class ToolAttachingChatClient(IChatClient inner, IMcpToolProvider provider) : DelegatingChatClient(inner)
+public sealed class ToolAttachingChatClient(IChatClient inner, IMcpToolProvider provider, ILogger<ToolAttachingChatClient> logger) : DelegatingChatClient(inner)
 {
     private static IList<AITool> MergeTools(IList<AITool>? existing, IReadOnlyList<AITool> mcp)
     {
@@ -29,17 +29,99 @@ public sealed class ToolAttachingChatClient(IChatClient inner, IMcpToolProvider 
     
     public override async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
     {
-        var chatOptions = await PrepareOptionsWithToolsAsync(options, cancellationToken);
-        
-        return await base.GetResponseAsync(messages, chatOptions, cancellationToken);
+        try
+        {
+            var chatOptions = await PrepareOptionsWithToolsAsync(options, cancellationToken);
+            
+            return await base.GetResponseAsync(messages, chatOptions, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error occurred while getting chat response. Returning error message as response.");
+            
+            // Return error as a chat response instead of throwing
+            var errorMessage = $"An error occurred while processing your request: {ex.Message}";
+            return new ChatResponse(new ChatMessage(ChatRole.Assistant, errorMessage));
+        }
     }
 
     public override async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var chatOptions = await PrepareOptionsWithToolsAsync(options, cancellationToken);
+        ChatOptions? chatOptions = null;
+        bool hasInitialError = false;
+        ChatResponseUpdate? initialErrorUpdate = null;
+        
+        try
+        {
+            chatOptions = await PrepareOptionsWithToolsAsync(options, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error occurred while preparing chat options for streaming. Returning error message as response.");
+            
+            // Set error flag and prepare error update
+            var errorMessage = $"An error occurred while preparing your request: {ex.Message}";
+            initialErrorUpdate = new ChatResponseUpdate
+            {
+                Role = ChatRole.Assistant,
+                Contents = [new TextContent(errorMessage)]
+            };
+            hasInitialError = true;
+        }
+        
+        // If there was an initial error, yield it and stop
+        if (hasInitialError)
+        {
+            yield return initialErrorUpdate!;
+            yield break;
+        }
 
-        await foreach (var update in base.GetStreamingResponseAsync(messages, chatOptions, cancellationToken))
-            yield return update;
+        IAsyncEnumerator<ChatResponseUpdate>? enumerator = null;
+        bool hasError = false;
+        ChatResponseUpdate? errorUpdate = null;
+        
+        try
+        {
+            enumerator = base.GetStreamingResponseAsync(messages, chatOptions, cancellationToken).GetAsyncEnumerator(cancellationToken);
+            
+            while (true)
+            {
+                ChatResponseUpdate update;
+                
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                        break;
+                    
+                    update = enumerator.Current;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error occurred while streaming chat response. Returning error message as response.");
+                    
+                    // Set error flag and prepare error update to yield after breaking out of try block
+                    var errorMessage = $"An error occurred while processing your request: {ex.Message}";
+                    errorUpdate = new ChatResponseUpdate
+                    {
+                        Role = ChatRole.Assistant,
+                        Contents = [new TextContent(errorMessage)]
+                    };
+                    hasError = true;
+                    break;
+                }
+                
+                yield return update;
+            }
+        }
+        finally
+        {
+            if (enumerator is not null)
+                await enumerator.DisposeAsync();
+        }
+        
+        // Yield error update if there was an error
+        if (hasError)
+            yield return errorUpdate!;
     }
 
 

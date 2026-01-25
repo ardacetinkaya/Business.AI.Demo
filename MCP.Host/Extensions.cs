@@ -20,7 +20,7 @@ public static class Extensions
     
     public static ChatClientBuilder AddMcpTools(this ChatClientBuilder builder)
     {
-        builder.Use((inner, sp) => new ToolAttachingChatClient(inner, sp.GetRequiredService<IMcpToolProvider>()));
+        builder.Use((inner, sp) => new ToolAttachingChatClient(inner, sp.GetRequiredService<IMcpToolProvider>(), sp.GetRequiredService<ILogger<ToolAttachingChatClient>>()));
         return builder;
     }
 }
